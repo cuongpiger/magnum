@@ -11,17 +11,17 @@
 #    limitations under the License.
 import os
 import sys
-
+import pecan
+from typing import Optional
 from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
-import pecan
 
+import magnum.conf
 from magnum.api import config as api_config
 from magnum.api import middleware
 from magnum.common import config as common_config
 from magnum.common import service
-import magnum.conf
 
 CONF = magnum.conf.CONF
 
@@ -53,8 +53,12 @@ def setup_app(config=None):
 
 
 def load_app():
+    """
+    Try to find the file `api-paste.ini` in the config-option `api_paste_config` to load the WSGI app.
+    The `cfg_file` is the path of the `api-paste.ini` file.
+    """
     cfg_file = None
-    cfg_path = CONF.api.api_paste_config
+    cfg_path = CONF.api.api_paste_config  # type: Optional[str]
     if not os.path.isabs(cfg_path):
         cfg_file = CONF.find_file(cfg_path)
     elif os.path.exists(cfg_path):

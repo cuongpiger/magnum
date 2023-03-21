@@ -20,6 +20,7 @@ from typing import Optional
 from oslo_concurrency import processutils
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
+from paste.urlmap import URLMap
 from werkzeug import serving
 
 import magnum.conf
@@ -60,8 +61,7 @@ def main():
     # Enable object backporting via the conductor
     base.MagnumObject.indirection_api = base.MagnumObjectIndirectionAPI()
 
-    app = api_app.load_app()
-
+    app = api_app.load_app()  # type:URLMap # load the app
     # Setup OSprofiler for WSGI service
     profiler.setup('magnum-api', CONF.host)
 
