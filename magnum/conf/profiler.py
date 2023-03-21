@@ -11,13 +11,20 @@
 # limitations under the License.
 
 from oslo_utils import importutils
+from oslo_config import cfg
+from types import ModuleType
+from typing import Optional
+
+# Try to import Python osprofiler library, return None if this library is not installed on service host.
+profiler_opts = importutils.try_import('osprofiler.opts')  # type: Optional[ModuleType]
 
 
-profiler_opts = importutils.try_import('osprofiler.opts')
-
-
-def register_opts(conf):
-    if profiler_opts:
+def register_opts(conf: cfg.ConfigOpts):
+    """
+    Depends on the user defined config-options inside conf variable, this function will set up osprofiler to satisfy the
+    requirements of the service.
+    """
+    if profiler_opts:  # if osprofiler is installed
         profiler_opts.set_defaults(conf)
 
 

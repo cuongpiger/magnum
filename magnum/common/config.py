@@ -17,6 +17,7 @@
 
 from oslo_middleware import cors
 from oslo_policy import opts
+from typing import List
 
 from magnum.common import rpc
 import magnum.conf
@@ -25,8 +26,15 @@ from magnum import version
 CONF = magnum.conf.CONF
 
 
-def parse_args(argv, default_config_files=None):
-    rpc.set_defaults(control_exchange='magnum')
+def parse_args(argv: List[str], default_config_files=None):
+    """
+    Read and parse all the config-options into the CONF variable.
+    :param argv: The config-file path indicate which file CONF needs to read.
+    :param default_config_files: The default config-file path.
+    """
+    rpc.set_defaults(control_exchange='magnum')  # register a default topic for RPC to communicate with other services
+
+    # Tell CONF where to find the config-file to load and parse to populate itself.
     CONF(argv[1:],
          project='magnum',
          version=version.version_info.release_string(),

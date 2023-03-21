@@ -28,7 +28,6 @@ profiler = importutils.try_import("osprofiler.profiler")
 profiler_initializer = importutils.try_import("osprofiler.initializer")
 profiler_web = importutils.try_import("osprofiler.web")
 
-
 CONF = magnum.conf.CONF
 
 LOG = logging.getLogger(__name__)
@@ -55,7 +54,12 @@ class WsgiMiddleware(object):
         return request.get_response(self.application)
 
 
-def setup(binary, host):
+def setup(binary: str, host: str):
+    """
+    Set up the OSprofiler for the service.
+    :param binary: The name of the service's action, such as magnum-api, magnum-conductor, etc.
+    :param host: The name of the host, such as magnum.
+    """
     if hasattr(CONF, 'profiler') and CONF.profiler.enabled:
         profiler_initializer.init_from_conf(
             conf=CONF,

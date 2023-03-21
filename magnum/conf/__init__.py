@@ -13,6 +13,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+"""
+Read the docs to understand about oslo_config:
+https://docs.openstack.org/oslo.config/latest/configuration/quickstart.html
+"""
+
 from oslo_config import cfg
 
 from magnum.conf import api

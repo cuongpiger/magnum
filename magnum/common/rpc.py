@@ -28,11 +28,12 @@ __all__ = [
 
 import socket
 
-
 import oslo_messaging as messaging
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
+from oslo_config import cfg
+from typing import Optional
 
 from magnum.common import context as magnum_context
 from magnum.common import exception
@@ -41,8 +42,8 @@ import magnum.conf
 profiler = importutils.try_import("osprofiler.profiler")
 
 CONF = magnum.conf.CONF
-TRANSPORT = None
-NOTIFIER = None
+TRANSPORT = None  # type: Optional[messaging.transport.RPCTransport]
+NOTIFIER = None  # type: Optional[messaging.Notifier]
 
 ALLOWED_EXMODS = [
     exception.__name__,
@@ -50,7 +51,7 @@ ALLOWED_EXMODS = [
 EXTRA_EXMODS = []
 
 
-def init(conf):
+def init(conf: cfg.ConfigOpts):
     global TRANSPORT, NOTIFIER
     exmods = get_allowed_exmods()
     TRANSPORT = messaging.get_rpc_transport(conf,

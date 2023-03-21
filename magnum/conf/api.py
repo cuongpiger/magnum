@@ -47,6 +47,11 @@ api_service_opts = [
 
 
 def register_opts(conf: cfg.ConfigOpts):
+    """
+    Register group `api` and its config-options to `conf` variable.
+
+    :param conf: ConfigOpts object, used to register groups and their config-options.
+    """
     conf.register_group(api_group)  # register group `api`
     conf.register_opts(api_service_opts, group=api_group)  # add all options to group `api`
 

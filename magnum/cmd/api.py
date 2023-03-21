@@ -16,16 +16,16 @@
 
 import os
 import sys
-
+from typing import Optional
 from oslo_concurrency import processutils
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from werkzeug import serving
 
+import magnum.conf
 from magnum.api import app as api_app
 from magnum.common import profiler
 from magnum.common import service
-import magnum.conf
 from magnum.i18n import _
 from magnum.objects import base
 from magnum import version
@@ -65,8 +65,8 @@ def main():
     # Setup OSprofiler for WSGI service
     profiler.setup('magnum-api', CONF.host)
 
-    # SSL configuration
-    use_ssl = CONF.api.enabled_ssl
+    # SSL configuration, True if enabled_ssl is True
+    use_ssl = CONF.api.enabled_ssl  # type: bool
 
     # Create the WSGI server and start it
     host, port = CONF.api.host, CONF.api.port
@@ -78,7 +78,7 @@ def main():
     LOG.info('Serving on %(proto)s://%(host)s:%(port)s',
              dict(proto="https" if use_ssl else "http", host=host, port=port))
 
-    workers = CONF.api.workers
+    workers = CONF.api.workers  # type: Optional[int]
     if not workers:
         workers = processutils.get_worker_count()
     LOG.info('Server will handle each request in a new process up to'

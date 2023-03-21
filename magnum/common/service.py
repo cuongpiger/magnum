@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from oslo_log import log as logging
+from typing import List, Optional
 
 from magnum.common import config
 import magnum.conf
@@ -20,11 +21,16 @@ import magnum.conf
 CONF = magnum.conf.CONF
 
 
-def prepare_service(argv=None):
+def prepare_service(argv: Optional[List[str]] = None):
+    """
+    Prepare a service for launch. Includes parsing the config file to CONF variable, setting up logging, and preparing
+    for the messaging and notification subsystems.
+    :param argv: List of command line arguments when launching the program.
+    """
     if argv is None:
         argv = []
 
-    logging.register_options(CONF)
+    logging.register_options(CONF)  # call this method with `CONF` before parsing any application CLI options
     config.parse_args(argv)
     config.set_config_defaults()
 
