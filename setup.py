@@ -15,6 +15,13 @@
 
 import setuptools
 
+'''
+It uses `setuptools.setup()` to bundle the project into a package, with two arguments: 
+    - `setup_requires`: specifies that the `pbr` (with version 2.0.0 or later) package is required for the package's 
+    setup.
+    - `pbr=True`: specifies that the `pbr` package is used define the package's metadata (like version, number, author, 
+    etc.) from a `setup.cfg`.
+'''
 setuptools.setup(
     setup_requires=['pbr>=2.0.0'],
     pbr=True)
