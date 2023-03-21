@@ -44,7 +44,8 @@ from magnum.conf import trust
 from magnum.conf import utils
 from magnum.conf import x509
 
-CONF = cfg.CONF
+# This variable is used to read all the config-options from the CLI-args --confif-file
+CONF = cfg.CONF  # type: cfg.ConfigOpts
 
 api.register_opts(CONF)
 barbican.register_opts(CONF)

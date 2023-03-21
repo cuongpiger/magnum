@@ -30,7 +30,6 @@ from magnum.i18n import _
 from magnum.objects import base
 from magnum import version
 
-
 CONF = magnum.conf.CONF
 LOG = logging.getLogger(__name__)
 

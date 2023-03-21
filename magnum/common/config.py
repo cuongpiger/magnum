@@ -32,7 +32,6 @@ def parse_args(argv, default_config_files=None):
          version=version.version_info.release_string(),
          default_config_files=default_config_files)
     rpc.init(CONF)
-    print(CONF.api.host)
 
 
 def set_config_defaults():

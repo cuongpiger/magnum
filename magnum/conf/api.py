@@ -46,9 +46,9 @@ api_service_opts = [
 ]
 
 
-def register_opts(conf):
-    conf.register_group(api_group)
-    conf.register_opts(api_service_opts, group=api_group)
+def register_opts(conf: cfg.ConfigOpts):
+    conf.register_group(api_group)  # register group `api`
+    conf.register_opts(api_service_opts, group=api_group)  # add all options to group `api`
 
 
 def list_opts():
