@@ -307,3 +307,7 @@ def get_openstack_ca():
             return fd.read()
     else:
         return ''
+
+
+def print_debug(msg: str):
+    print("\033[32mDEBUG: %s\033[0m" % msg)

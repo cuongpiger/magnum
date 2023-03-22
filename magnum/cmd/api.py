@@ -80,8 +80,10 @@ def main():
 
     workers = CONF.api.workers  # type: Optional[int]
     if not workers:
-        workers = processutils.get_worker_count()
+        workers = processutils.get_worker_count()  # get the number of CPU's core of the host
     LOG.info('Server will handle each request in a new process up to'
              ' %s concurrent processes', workers)
+
+    # Run the server
     serving.run_simple(host, port, app, processes=workers,
                        ssl_context=_get_ssl_configs(use_ssl))

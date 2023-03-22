@@ -9,32 +9,37 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+
 import os
 import sys
 import pecan
 from typing import Optional
 from oslo_config import cfg
 from oslo_log import log
-from paste import deploy
+from paste import deploy, urlmap
+from typing import Dict
 
 import magnum.conf
 from magnum.api import config as api_config
 from magnum.api import middleware
 from magnum.common import config as common_config
 from magnum.common import service
+from magnum.common.utils import print_debug
 
 CONF = magnum.conf.CONF
 
 LOG = log.getLogger(__name__)
 
 
-def get_pecan_config():
+def get_pecan_config() -> pecan.Config:
+    print_debug("get_pecan_config() called")
     # Set up the pecan configuration
-    filename = api_config.__file__.replace('.pyc', '.py')
+    filename = api_config.__file__.replace('.pyc', '.py')  # type: str
     return pecan.configuration.conf_from_file(filename)
 
 
 def setup_app(config=None):
+    print_debug("setup_app() called")
     if not config:
         config = get_pecan_config()
 
@@ -52,13 +57,15 @@ def setup_app(config=None):
     return app
 
 
-def load_app():
+def load_app() -> urlmap.URLMap:
     """
     Try to find the file `api-paste.ini` in the config-option `api_paste_config` to load the WSGI app.
     The `cfg_file` is the path of the `api-paste.ini` file.
+    :return: An URLMap object is used to map to the app factory function that we specified in the `api-paste.ini` file.
     """
-    cfg_file = None
-    cfg_path = CONF.api.api_paste_config  # type: Optional[str]
+
+    cfg_file = None  # type: Optional[str]
+    cfg_path = CONF.api.api_paste_config
     if not os.path.isabs(cfg_path):
         cfg_file = CONF.find_file(cfg_path)
     elif os.path.exists(cfg_path):
@@ -70,10 +77,21 @@ def load_app():
     return deploy.loadapp("config:" + cfg_file)
 
 
-def app_factory(global_config, **local_conf):
+def app_factory(global_config: Dict[str, str], **local_conf: dict):
+    """
+    This function has been called following the order of the field `pipeline` in the `api-paste.ini` file.
+    In this case, it is the last function to be called after a series of middleware functions.
+    This function will call the function `setup_app()` to load the WSGI app.
+
+    :param global_config: The key-value pairs, including of these values:
+        - here: The path of the magnum directory used to run the API server.
+        - __file__: The path of api-paste.ini file.
+    """
+
     return setup_app()
 
 
 def build_wsgi_app(argv=None):
+    print_debug("build_wsgi_app() called")
     service.prepare_service(sys.argv)
     return load_app()
