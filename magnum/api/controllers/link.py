@@ -17,9 +17,10 @@ import pecan
 from wsme import types as wtypes
 
 from magnum.api.controllers import base
-
+from magnum.common.utils import print_debug
 
 def build_url(resource, resource_args, bookmark=False, base_url=None):
+    print_debug("build_url called: resource = %s" % resource)
     if base_url is None:
         base_url = pecan.request.host_url
 
@@ -46,12 +47,16 @@ class Link(base.APIBase):
     @staticmethod
     def make_link(rel_name, url, resource, resource_args,
                   bookmark=False, type=wtypes.Unset):
+
+        print_debug("make_link called: rel_name = %s" % rel_name)
         href = build_url(resource, resource_args,
                          bookmark=bookmark, base_url=url)
+        print_debug("make_link: href = %s" % href)
         return Link(href=href, rel=rel_name, type=type)
 
     @classmethod
     def sample(cls):
+        print_debug("Link.sample called")
         sample = cls(href="http://localhost:9511/clusters/"
                           "eaaca217-e7d8-47b4-bb41-3f99f20eed89",
                      rel="bookmark")

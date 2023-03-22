@@ -21,6 +21,7 @@ from magnum.api.controllers import link
 from magnum.api.controllers import v1
 from magnum.api.controllers import versions
 from magnum.api import expose
+from magnum.common.utils import print_debug
 
 
 class Version(base.APIBase):
@@ -43,6 +44,7 @@ class Version(base.APIBase):
 
     @staticmethod
     def convert(id, status, max, min):
+        print_debug("Version.convert called: id = %s" % id)
         version = Version()
         version.id = id
         version.links = [link.Link.make_link('self', pecan.request.host_url,
@@ -66,6 +68,7 @@ class Root(base.APIBase):
 
     @staticmethod
     def convert():
+        print_debug("Root.convert called")
         root = Root()
         root.name = "OpenStack Magnum API"
         root.description = ("Magnum is an OpenStack project which aims to "
@@ -91,6 +94,7 @@ class RootController(rest.RestController):
         # NOTE: The reason why convert() it's being called for every
         #       request is because we need to get the host url from
         #       the request object to make the links.
+        print_debug("RootController.get called")
         return Root.convert()
 
     @pecan.expose()
@@ -100,7 +104,7 @@ class RootController(rest.RestController):
         It redirects the request to the default version of the magnum API
         if the version number is not specified in the url.
         """
-
+        print_debug("RootController._route called")
         if args[0] and args[0] not in self._versions:
             args = [self._default_version] + args
         return super(RootController, self)._route(args)

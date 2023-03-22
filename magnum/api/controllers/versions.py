@@ -16,6 +16,7 @@
 from webob import exc
 
 from magnum.i18n import _
+from magnum.common.utils import print_debug
 
 #
 # For each newly added microversion change, update the API version history
@@ -63,6 +64,8 @@ class Version(object):
         :param from_string: create the version from string not headers
         :raises: webob.HTTPNotAcceptable
         """
+        print_debug("Version.__init__ called")
+
         if from_string:
             (self.major, self.minor) = tuple(int(i)
                                              for i in from_string.split('.'))
@@ -73,6 +76,7 @@ class Version(object):
                                                              latest_version)
 
     def __repr__(self):
+        print_debug("Version.__repr__ called")
         return '%s.%s' % (self.major, self.minor)
 
     @staticmethod
@@ -85,7 +89,7 @@ class Version(object):
         :returns: a tuple of (major, minor) version numbers
         :raises: webob.HTTPNotAcceptable
         """
-
+        print_debug("Version.parse_headers called")
         version_hdr = headers.get(Version.string, default_version)
 
         try:
@@ -111,15 +115,18 @@ class Version(object):
         return version
 
     def is_null(self):
+        print_debug("Version.is_null called")
         return self.major == 0 and self.minor == 0
 
     def matches(self, start_version, end_version):
+        print_debug("Version.matches called")
         if self.is_null():
             raise ValueError
 
         return start_version <= self <= end_version
 
     def __lt__(self, other):
+        print_debug("Version.__lt__ called")
         if self.major < other.major:
             return True
         if self.major == other.major and self.minor < other.minor:
@@ -127,6 +134,7 @@ class Version(object):
         return False
 
     def __gt__(self, other):
+        print_debug("Version.__gt__ called")
         if self.major > other.major:
             return True
         if self.major == other.major and self.minor > other.minor:
@@ -134,13 +142,17 @@ class Version(object):
         return False
 
     def __eq__(self, other):
+        print_debug("Version.__eq__ called")
         return self.major == other.major and self.minor == other.minor
 
     def __le__(self, other):
+        print_debug("Version.__le__ called")
         return self < other or self == other
 
     def __ne__(self, other):
+        print_debug("Version.__ne__ called")
         return not self.__eq__(other)
 
     def __ge__(self, other):
+        print_debug("Version.__ge__ called")
         return self > other or self == other

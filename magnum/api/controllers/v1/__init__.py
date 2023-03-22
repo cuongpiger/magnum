@@ -37,6 +37,7 @@ from magnum.api.controllers import versions as ver
 from magnum.api import expose
 from magnum.api import http_error
 from magnum.i18n import _
+from magnum.common.utils import print_debug
 
 
 LOG = logging.getLogger(__name__)
@@ -204,9 +205,11 @@ class Controller(controllers_base.Controller):
         # NOTE: The reason why convert() it's being called for every
         #       request is because we need to get the host url from
         #       the request object to make the links.
+        print_debug("Controller.get called")
         return V1.convert()
 
     def _check_version(self, version, headers=None):
+        print_debug("Controller._check_version called")
         if headers is None:
             headers = {}
         # ensure that major version in the URL matches the header
@@ -234,6 +237,7 @@ class Controller(controllers_base.Controller):
 
     @pecan.expose()
     def _route(self, args):
+        print_debug("VersionController._route called")
         version = ver.Version(
             pecan.request.headers, MIN_VER_STR, MAX_VER_STR)
 

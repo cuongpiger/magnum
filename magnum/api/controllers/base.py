@@ -24,6 +24,7 @@ from pecan import rest
 from webob import exc
 import wsme
 from wsme import types as wtypes
+from magnum.common.utils import print_debug
 
 
 # name of attribute to keep version method information
@@ -39,6 +40,7 @@ class APIBase(wtypes.Base):
     """The time in UTC at which the object is updated"""
 
     def as_dict(self):
+        print_debug("APIBase.as_dict called")
         """Render this object as a dict of its fields."""
         return {k: getattr(self, k)
                 for k in self.fields
@@ -51,6 +53,7 @@ class APIBase(wtypes.Base):
         :param except_list: A list of fields that won't be touched.
 
         """
+        print_debug("APIBase.unset_fields_except called")
         if except_list is None:
             except_list = []
 
@@ -67,6 +70,7 @@ class ControllerMetaclass(type):
     """
 
     def __new__(mcs, name, bases, cls_dict):
+        print_debug("ControllerMetaclass.__new__ called")
         """Adds version function dictionary to the class."""
 
         versioned_methods = None
@@ -95,6 +99,7 @@ class Controller(rest.RestController):
     """Base Rest Controller"""
 
     def __getattribute__(self, key):
+        print_debug("Controller.__getattribute__ called")
 
         def version_select():
             """Select the correct method based on version
@@ -156,6 +161,7 @@ class Controller(rest.RestController):
         @raises: ApiVersionsIntersect if an version overlap is found between
             method versions.
         """
+        print_debug("Controller.api_version called")
 
         def decorator(f):
             obj_min_ver = versions.Version('', '', '', min_ver)
@@ -209,6 +215,7 @@ class Controller(rest.RestController):
         :param func_list: list of VersionedMethod objects
         :return: boolean
         """
+        print_debug("Controller.check_for_versions_intersection called")
 
         pairs = []
         counter = 0

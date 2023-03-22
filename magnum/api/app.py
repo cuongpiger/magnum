@@ -32,19 +32,22 @@ LOG = log.getLogger(__name__)
 
 
 def get_pecan_config() -> pecan.Config:
-    print_debug("get_pecan_config() called")
+    """
+    Load the configurations for the Pecan Application (`app` variable) from the magnum.api.config file. This application
+    will be stored in the pecan.Config object.
+    :return : A pecan.Config object that contains the configuration for the Pecan Application.
+    """
     # Set up the pecan configuration
-    filename = api_config.__file__.replace('.pyc', '.py')  # type: str
-    return pecan.configuration.conf_from_file(filename)
+    filename = api_config.__file__.replace('.pyc', '.py')  # type: str # get path of the magnum/api/config.py file
+    return pecan.configuration.conf_from_file(filename)  # load the configuration into the pecan.Config object
 
 
 def setup_app(config=None):
-    print_debug("setup_app() called")
     if not config:
-        config = get_pecan_config()
+        config = get_pecan_config()  # type: pecan.Config
 
-    app_conf = dict(config.app)
-    common_config.set_config_defaults()
+    app_conf = dict(config.app)  # get the user-defined configurations from the `app` variable from the config file
+    common_config.set_config_defaults()  # set up CORS middleware, policy for magnum service
 
     app = pecan.make_app(
         app_conf.pop('root'),
@@ -92,6 +95,5 @@ def app_factory(global_config: Dict[str, str], **local_conf: dict):
 
 
 def build_wsgi_app(argv=None):
-    print_debug("build_wsgi_app() called")
     service.prepare_service(sys.argv)
     return load_app()
