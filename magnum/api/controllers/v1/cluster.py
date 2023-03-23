@@ -41,6 +41,7 @@ import magnum.conf
 from magnum.i18n import _
 from magnum import objects
 from magnum.objects import fields
+from magnum.common.utils import print_debug
 
 LOG = logging.getLogger(__name__)
 CONF = magnum.conf.CONF
@@ -378,6 +379,7 @@ class ClustersController(base.Controller):
         :param sort_key: column to sort results by. Default: id.
         :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
         """
+        print_debug("ClustersController.get_all() called")
         context = pecan.request.context
         policy.enforce(context, 'cluster:get_all',
                        action='cluster:get_all')

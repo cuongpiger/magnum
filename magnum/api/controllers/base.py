@@ -100,7 +100,7 @@ class Controller(rest.RestController):
 
     def __getattribute__(self, key):
         print_debug("Controller.__getattribute__ called")
-
+        print("Key: {}".format(key))
         def version_select():
             """Select the correct method based on version
 

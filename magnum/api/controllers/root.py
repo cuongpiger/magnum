@@ -56,7 +56,6 @@ class Version(base.APIBase):
 
 
 class Root(base.APIBase):
-
     name = wtypes.text
     """The name of the API"""
 
@@ -80,12 +79,16 @@ class Root(base.APIBase):
 
 
 class RootController(rest.RestController):
+    """
+    RootController is the single entrypoint of the Pecan application, which can be considered as the root URL path of
+    the application. It is responsible for routing the request to the appropriate controller based on the version. In
+    this scenario, the root URL path is http://localhost:8080/v1 (dev-env).
+    Pecan application used the object distributed routing mechanism to process the request.
+    """
 
-    _versions = ['v1']
-    """All supported API versions"""
+    _versions = ['v1']  # all supported API versions
 
-    _default_version = 'v1'
-    """The default API version"""
+    _default_version = 'v1'  # the default API version
 
     v1 = v1.Controller()
 
@@ -99,10 +102,12 @@ class RootController(rest.RestController):
 
     @pecan.expose()
     def _route(self, args):
-        """Overrides the default routing behavior.
-
-        It redirects the request to the default version of the magnum API
-        if the version number is not specified in the url.
+        """
+        Overrides the default routing behavior.
+        Routes a request to the appropriate controller and returns its result. Performs a bit of validation - refuses to
+        route delete and put actions via a GET request.
+        It redirects the request to the default version of the magnum API if the version number is not specified in the
+        url.
         """
         print_debug("RootController._route called")
         if args[0] and args[0] not in self._versions:
