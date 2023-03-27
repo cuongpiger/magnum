@@ -98,7 +98,8 @@ class RootController(rest.RestController):
         #       request is because we need to get the host url from
         #       the request object to make the links.
         print_debug("RootController.get called")
-        return Root.convert()
+        self.convert = Root.convert()
+        return self.convert
 
     @pecan.expose()
     def _route(self, args):

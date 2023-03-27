@@ -14,6 +14,7 @@ from oslo_utils import importutils
 from oslo_config import cfg
 from types import ModuleType
 from typing import Optional
+from osprofiler.opts import _profiler_opt_group, _PROFILER_OPTS
 
 # Try to import Python osprofiler library, return None if this library is not installed on service host.
 profiler_opts = importutils.try_import('osprofiler.opts')  # type: Optional[ModuleType]
