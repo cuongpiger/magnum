@@ -70,3 +70,4 @@ doc/source/_static/
 
 # Files created by releasenotes build
 releasenotes/build
+.idea
