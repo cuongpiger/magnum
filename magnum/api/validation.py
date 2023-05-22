@@ -14,23 +14,19 @@
 # limitations under the License.
 
 import decorator
-
 import pecan
-
+import magnum.conf
 from keystoneauth1 import exceptions as ka_exception
-
 from magnum.api import utils as api_utils
 from magnum.common import clients
 from magnum.common import exception
-import magnum.conf
 from magnum.drivers.common import driver
 from magnum.i18n import _
 from magnum import objects
 
 CONF = magnum.conf.CONF
 
-cluster_update_allowed_properties = set(['node_count', 'health_status',
-                                         'health_status_reason'])
+cluster_update_allowed_properties = set(['node_count', 'health_status', 'health_status_reason'])
 federation_update_allowed_properties = set(['member_ids', 'properties'])
 
 
@@ -219,7 +215,7 @@ def _enforce_volume_driver_types(cluster_template):
 
 def _enforce_volume_storage_size(cluster_template, cluster):
     volume_size = cluster.get('docker_volume_size') \
-        or cluster_template.get('docker_volume_size')
+                  or cluster_template.get('docker_volume_size')
     storage_driver = cluster_template.get('docker_storage_driver')
 
     if storage_driver == 'devicemapper':
@@ -231,7 +227,6 @@ def _enforce_volume_storage_size(cluster_template, cluster):
 
 
 def validate_cluster_properties(delta):
-
     update_disallowed_properties = delta - cluster_update_allowed_properties
     if update_disallowed_properties:
         err = (_("cannot change cluster property(ies) %s.") %
@@ -240,7 +235,6 @@ def validate_cluster_properties(delta):
 
 
 def validate_federation_properties(delta):
-
     update_disallowed_properties = delta - federation_update_allowed_properties
     if update_disallowed_properties:
         err = (_("cannot change federation property(ies) %s.") %
@@ -272,21 +266,21 @@ class Validator(object):
             raise exception.InvalidParameterValue(_(
                 'Network driver type %(driver)s is not supported, '
                 'expecting a %(supported_drivers)s network driver.') % {
-                    'driver': driver,
-                    'supported_drivers': '/'.join(
-                        cls.supported_network_drivers + ['unspecified'])})
+                                                      'driver': driver,
+                                                      'supported_drivers': '/'.join(
+                                                          cls.supported_network_drivers + ['unspecified'])})
 
     @classmethod
     def _validate_network_driver_allowed(cls, driver):
         """Confirm that driver is allowed via configuration for this COE."""
         if ('all' not in cls.allowed_network_drivers and
-           driver not in cls.allowed_network_drivers):
+                driver not in cls.allowed_network_drivers):
             raise exception.InvalidParameterValue(_(
                 'Network driver type %(driver)s is not allowed, '
                 'expecting a %(allowed_drivers)s network driver. ') % {
-                    'driver': driver,
-                    'allowed_drivers': '/'.join(
-                        cls.allowed_network_drivers + ['unspecified'])})
+                                                      'driver': driver,
+                                                      'allowed_drivers': '/'.join(
+                                                          cls.allowed_network_drivers + ['unspecified'])})
 
     @classmethod
     def validate_volume_driver(cls, driver):
@@ -299,9 +293,9 @@ class Validator(object):
             raise exception.InvalidParameterValue(_(
                 'Volume driver type %(driver)s is not supported, '
                 'expecting a %(supported_volume_driver)s volume driver.') % {
-                    'driver': driver,
-                    'supported_volume_driver': '/'.join(
-                        cls.supported_volume_driver + ['unspecified'])})
+                                                      'driver': driver,
+                                                      'supported_volume_driver': '/'.join(
+                                                          cls.supported_volume_driver + ['unspecified'])})
 
     @classmethod
     def validate_server_type(cls, server_type):
@@ -314,13 +308,12 @@ class Validator(object):
             raise exception.InvalidParameterValue(_(
                 'Server type %(server_type)s is not supported, '
                 'expecting a %(supported_server_types)s server type.') % {
-                    'server_type': server_type,
-                    'supported_server_types': '/'.join(
-                        cls.supported_server_types + ['unspecified'])})
+                                                      'server_type': server_type,
+                                                      'supported_server_types': '/'.join(
+                                                          cls.supported_server_types + ['unspecified'])})
 
 
 class K8sValidator(Validator):
-
     supported_network_drivers = ['flannel', 'calico']
     supported_server_types = ['vm', 'bm']
     allowed_network_drivers = (
@@ -332,7 +325,6 @@ class K8sValidator(Validator):
 
 
 class SwarmValidator(Validator):
-
     supported_network_drivers = ['docker', 'flannel']
     supported_server_types = ['vm', 'bm']
     allowed_network_drivers = (CONF.cluster_template.
@@ -344,7 +336,6 @@ class SwarmValidator(Validator):
 
 
 class MesosValidator(Validator):
-
     supported_network_drivers = ['docker']
     supported_server_types = ['vm', 'bm']
     allowed_network_drivers = (CONF.cluster_template.
