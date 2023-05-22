@@ -9,19 +9,19 @@
 #    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
+
 import os
 import sys
-
+import pecan
+import magnum.conf
 from oslo_config import cfg
 from oslo_log import log
 from paste import deploy
-import pecan
-
+from magnum.common import profiler
 from magnum.api import config as api_config
 from magnum.api import middleware
 from magnum.common import config as common_config
 from magnum.common import service
-import magnum.conf
 
 CONF = magnum.conf.CONF
 
@@ -55,6 +55,7 @@ def setup_app(config=None):
 def load_app():
     cfg_file = None
     cfg_path = CONF.api.api_paste_config
+    LOG.info(f"The profiler config is: {CONF.profiler.http_request_tracing_token}")
     if not os.path.isabs(cfg_path):
         cfg_file = CONF.find_file(cfg_path)
     elif os.path.exists(cfg_path):
@@ -63,6 +64,7 @@ def load_app():
     if not cfg_file:
         raise cfg.ConfigFilesNotFoundError([CONF.api.api_paste_config])
     LOG.info("Full WSGI config used: %s", cfg_file)
+    profiler.setup('magnum-api', CONF.host)
     return deploy.loadapp("config:" + cfg_file)
 
 
