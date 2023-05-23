@@ -15,11 +15,11 @@ stop_magnum_api_uwsgi() {
   sudo systemctl stop devstack@magnum-api.service
 }
 
-if "$1" == "start-api"; then
+if [ "$1" = "start-api" ]; then
   run_magnum_api
-elif "$1" == "start-api-uwsgi"; then
+elif [ "$1" = "start-api-uwsgi" ]; then
   run_magnum_api_uwsgi
-elif "$1" == "stop-api-uwsgi"; then
+elif [ "$1" = "stop-api-uwsgi" ]; then
   stop_magnum_api_uwsgi
 else
   echo "Usage: $0 api"
