@@ -1,4 +1,8 @@
-run_uwsgi: uwsgi --procname-prefix magnum-api --ini /etc/magnum/magnum-api-uwsgi.ini
+run-api-uwsgi:
+	@./cmd/run.sh start-api-uwsgi
 
-run-magnum-api:
-	@./cmd/run.sh api
+stop-api-uwsgi:
+	@./cmd/run.sh stop-api-uwsgi
+
+run-api:
+	@./cmd/run.sh start-api
