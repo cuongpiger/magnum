@@ -15,6 +15,7 @@
 import datetime
 import operator
 import six
+import wsme
 
 from magnum.api.controllers import versions
 from magnum.api import versioned_method
@@ -22,16 +23,14 @@ from magnum.common import exception
 from magnum.i18n import _
 from pecan import rest
 from webob import exc
-import wsme
 from wsme import types as wtypes
-
+from typing import List, Optional
 
 # name of attribute to keep version method information
 VER_METHOD_ATTR = 'versioned_methods'
 
 
 class APIBase(wtypes.Base):
-
     created_at = wsme.wsattr(datetime.datetime, readonly=True)
     """The time in UTC at which the object is created"""
 
@@ -45,7 +44,7 @@ class APIBase(wtypes.Base):
                 if hasattr(self, k) and
                 getattr(self, k) != wsme.Unset}
 
-    def unset_fields_except(self, except_list=None):
+    def unset_fields_except(self, except_list: Optional[List[str]] = None):
         """Unset fields so they don't appear in the message body.
 
         :param except_list: A list of fields that won't be touched.

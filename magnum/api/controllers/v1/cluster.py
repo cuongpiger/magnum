@@ -46,157 +46,155 @@ from magnum.objects import fields
 LOG = logging.getLogger(__name__)
 CONF = magnum.conf.CONF
 
+nodegroup_fields = ('node_count', 'master_count', 'node_addresses', 'master_addresses')
+unset_fields_except = ('uuid', 'name', 'cluster_template_id', 'keypair', 'docker_volume_size', 'labels', 'node_count',
+                       'status', 'master_flavor_id', 'flavor_id', 'create_timeout', 'master_count', 'stack_id',
+                       'health_status')
+
 
 class ClusterID(wtypes.Base):
-    """API representation of a cluster ID
+    """API representation of a cluster ID. This class enforces type checking and value constraints, and converts between
+    the internal object model and the API representation of a cluster ID.
 
-    This class enforces type checking and value constraints, and converts
-    between the internal object model and the API representation of a cluster
-    ID.
+    ...
+    Attributes
+    ----------
+    uuid : types.UuidType
+        Unique UUID for this cluster
     """
 
     uuid = types.uuid
-    """Unique UUID for this cluster"""
 
-    def __init__(self, uuid):
-        self.uuid = uuid
+    def __init__(self, uuid_: types.UuidType):  # noqa
+        """[cuongdm]
+        Constructor for ClusterID class
+        """
+        self.uuid = uuid_
 
 
 class Cluster(base.APIBase):
-    """API representation of a cluster.
+    """API representation of a cluster. This class enforces type checking and value constraints, and converts between
+    the internal object model and the API representation of a Cluster.
 
-    This class enforces type checking and value constraints, and converts
-    between the internal object model and the API representation of a Cluster.
+    ...
+    Attributes
+    ----------
+    uuid : types.UuidType
+        Unique UUID for this cluster
+    name : wtypes.StringType
+        The cluster name, max length is 242 because of heat stack requires max length limit to 255,
+        and Magnum amend an uuid length
+    cluster_template_id : wtypes.text
+        The cluster_template UUID
+    keypair : wtypes.StringType
+        The name of the Nova SSH keypair
+    node_count : wtypes.IntegerType
+        The node count for this cluster. Default to 1 if not set
+    master_count : wtypes.IntegerType
+        The number of master nodes for this cluster. Default to 1 if not set
+    docker_volume_size : wtypes.IntegerType
+        The size in GB of the docker volume
+    labels : wtypes.DictType
+        One or more key/value pairs
+    master_flavor_id : wtypes.StringType
+        The flavor of the master nodes
+    flavor_id : wtypes.StringType
+        The flavor of this cluster
+    create_timeout : wtypes.IntegerType
+        The timeout for creating this cluster in minutes. Default to 60 if not set
+    links: List[link.Link]
+        A list containing a self link and associated cluster links
+    stack_id: wtypes.text
+        Stack id of the Heat stack
+    status: wtypes.text
+        Status of the cluster from the Heat stack
+    status_reason: wtypes.text
+        Status reason of the cluster from the Heat stack
+    health_status: wtypes.text
+        Health status of the cluster from the native COE API
+    health_status_reason: wtypes.DictType
+        Health status reason of the cluster from the native COE API
+    discovery_url: wtypes.text
+        URL used for cluster node discovery
+    api_address : wtypes.text
+        API address of cluster master node
+    coe_version : wtypes.text
+        Version of the COE software currently running in this cluster. Example swarm-version or k8s-version
+    container_version : wtypes.text
+        Version of the container software, such as Docker version is running in the cluster
+    project_id : wtypes.text
+        Project id of the cluster belongs to
+    user_id : wtypes.text
+        User id of the cluster belongs to
+    node_addresses : List[wtypes.text]
+        IP addresses of slave nodes
+    master_addresses : List[wtypes.text]
+        IP addresses of master nodes
+    faults : wstypes.DictType
+        Fault into collected from Heat resources of this cluster
+    fixed_network : wtypes.StringType
+        The fixed network name to attach to the cluster
+    fixed_subnet : wtypes.StringType
+        The fixed subnet name to attach to the cluster
+    floating_ip_enabled : wtypes.BooleanType
+        Indicates whether created clusters should have a floating ip or not
+    merge_labels : wtypes.DictType
+        Indicates whether the labels will be merged with the ClusterTemplate labels.
+    labels_overridden : wtypes.DictType
+        Contains labels that have a value different from the parent labels
+    labels_added: wtypes.DictType
+        Contains labels that do not exist in the parent
+    labels_skipped: wtypes.DictType
+        Contains labels that exist in the parent but were not inherited
+    master_lb_enabled : wtypes.BooleanType
+        Indicates whether created clusters should have a load balancer for master nodes or not
     """
 
     uuid = types.uuid
-    """Unique UUID for this cluster"""
-
-    name = wtypes.StringType(min_length=1, max_length=242,
-                             pattern='^[a-zA-Z][a-zA-Z0-9_.-]*$')
-    """Name of this cluster, max length is limited to 242 because of heat
-     stack requires max length limit to 255, and Magnum amend a uuid length"""
-
+    name = wtypes.StringType(min_length=1, max_length=242, pattern='^[a-zA-Z][a-zA-Z0-9_.-]*$')
     cluster_template_id = wsme.wsattr(wtypes.text, mandatory=True)
-    """The cluster_template UUID"""
-
-    keypair = wsme.wsattr(wtypes.StringType(min_length=1, max_length=255),
-                          default=None)
-    """The name of the nova ssh keypair"""
-
+    keypair = wsme.wsattr(wtypes.StringType(min_length=1, max_length=255), default=None)
     node_count = wsme.wsattr(wtypes.IntegerType(minimum=0), default=1)
-    """The node count for this cluster. Default to 1 if not set"""
-
     master_count = wsme.wsattr(wtypes.IntegerType(minimum=1), default=1)
-    """The number of master nodes for this cluster. Default to 1 if not set"""
-
     docker_volume_size = wtypes.IntegerType(minimum=1)
-    """The size in GB of the docker volume"""
-
-    labels = wtypes.DictType(wtypes.text, types.MultiType(wtypes.text,
-                                                          six.integer_types,
-                                                          bool,
-                                                          float))
-    """One or more key/value pairs"""
-
+    labels = wtypes.DictType(wtypes.text, types.MultiType(wtypes.text, six.integer_types, bool, float))
     master_flavor_id = wtypes.StringType(min_length=1, max_length=255)
-    """The flavor of the master node for this Cluster"""
-
     flavor_id = wtypes.StringType(min_length=1, max_length=255)
-    """The flavor of this Cluster"""
-
     create_timeout = wsme.wsattr(wtypes.IntegerType(minimum=0), default=60)
-    """Timeout for creating the cluster in minutes. Default to 60 if not set"""
-
     links = wsme.wsattr([link.Link], readonly=True)
-    """A list containing a self link and associated cluster links"""
-
     stack_id = wsme.wsattr(wtypes.text, readonly=True)
-    """Stack id of the heat stack"""
-
     status = wtypes.Enum(wtypes.text, *fields.ClusterStatus.ALL)
-    """Status of the cluster from the heat stack"""
-
     status_reason = wtypes.text
-    """Status reason of the cluster from the heat stack"""
-
     health_status = wtypes.Enum(wtypes.text, *fields.ClusterHealthStatus.ALL)
-    """Health status of the cluster from the native COE API"""
-
     health_status_reason = wtypes.DictType(wtypes.text, wtypes.text)
-    """Health status reason of the cluster from the native COE API"""
-
     discovery_url = wtypes.text
-    """Url used for cluster node discovery"""
-
     api_address = wsme.wsattr(wtypes.text, readonly=True)
-    """Api address of cluster master node"""
-
     coe_version = wsme.wsattr(wtypes.text, readonly=True)
-    """Version of the COE software currently running in this cluster.
-    Example: swarm version or kubernetes version."""
-
     container_version = wsme.wsattr(wtypes.text, readonly=True)
-    """Version of the container software. Example: docker version."""
-
     project_id = wsme.wsattr(wtypes.text, readonly=True)
-    """Project id of the cluster belongs to"""
-
     user_id = wsme.wsattr(wtypes.text, readonly=True)
-    """User id of the cluster belongs to"""
-
     node_addresses = wsme.wsattr([wtypes.text], readonly=True)
-    """IP addresses of cluster slave nodes"""
-
     master_addresses = wsme.wsattr([wtypes.text], readonly=True)
-    """IP addresses of cluster master nodes"""
-
     faults = wsme.wsattr(wtypes.DictType(wtypes.text, wtypes.text))
-    """Fault info collected from the heat resources of this cluster"""
-
     fixed_network = wtypes.StringType(min_length=1, max_length=255)
-    """The fixed network name to attach to the Cluster"""
-
     fixed_subnet = wtypes.StringType(min_length=1, max_length=255)
-    """The fixed subnet name to attach to the Cluster"""
-
     floating_ip_enabled = wsme.wsattr(types.boolean)
-    """Indicates whether created clusters should have a floating ip or not."""
-
     merge_labels = wsme.wsattr(types.boolean, default=False)
-    """Indicates whether the labels will be merged with the CT labels."""
-
-    labels_overridden = wtypes.DictType(
-        wtypes.text, types.MultiType(
-            wtypes.text, six.integer_types, bool, float))
-    """Contains labels that have a value different than the parent labels."""
-
-    labels_added = wtypes.DictType(
-        wtypes.text, types.MultiType(
-            wtypes.text, six.integer_types, bool, float))
-    """Contains labels that do not exist in the parent."""
-
-    labels_skipped = wtypes.DictType(
-        wtypes.text, types.MultiType(
-            wtypes.text, six.integer_types, bool, float))
-    """Contains labels that exist in the parent but were not inherited."""
-
+    labels_overridden = wtypes.DictType(wtypes.text, types.MultiType(wtypes.text, six.integer_types, bool, float))
+    labels_added = wtypes.DictType(wtypes.text, types.MultiType(wtypes.text, six.integer_types, bool, float))
+    labels_skipped = wtypes.DictType(wtypes.text, types.MultiType(wtypes.text, six.integer_types, bool, float))
     master_lb_enabled = wsme.wsattr(types.boolean)
-    """Indicates whether created clusters should have a load balancer for master
-       nodes or not.
-       """
 
     def __init__(self, **kwargs):
         super(Cluster, self).__init__()
-        self.fields = []
-        for field in objects.Cluster.fields:
-            # Skip fields we do not expose.
-            if not hasattr(self, field):
+
+        self.fields: List[str] = []
+        for field in objects.Cluster.fields:  # type: str
+            if not hasattr(self, field):  # skip fields we do not expose
                 continue
             self.fields.append(field)
             setattr(self, field, kwargs.get(field, wtypes.Unset))
-        nodegroup_fields = ['node_count', 'master_count',
-                            'node_addresses', 'master_addresses']
+
         for field in nodegroup_fields:
             self.fields.append(field)
             setattr(self, field, kwargs.get(field, wtypes.Unset))
@@ -204,12 +202,7 @@ class Cluster(base.APIBase):
     @staticmethod
     def _convert_with_links(cluster, url, expand=True, parent_labels=None):
         if not expand:
-            cluster.unset_fields_except(['uuid', 'name', 'cluster_template_id',
-                                         'keypair', 'docker_volume_size',
-                                         'labels', 'node_count', 'status',
-                                         'master_flavor_id', 'flavor_id',
-                                         'create_timeout', 'master_count',
-                                         'stack_id', 'health_status'])
+            cluster.unset_fields_except(unset_fields_except)
         else:
             overridden, added, skipped = api_utils.get_labels_diff(
                 parent_labels, cluster.labels)

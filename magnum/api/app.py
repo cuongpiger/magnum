@@ -2,7 +2,9 @@
 FUNCTIONS:
 - build_wsgi_app(argv=None)
 - load_app()
-
+- app_factory(global_config, **local_conf)
+- setup_app(config=None)
+- get_pecan_config() -> pecan.configuration.Config
 """
 
 import os
@@ -74,11 +76,11 @@ def load_app() -> urlmap.URLMap:
 
 
 def app_factory(global_config, **local_conf):
-    print("app_factory has been called")
-    return setup_app()
+    app = setup_app()
+    return app
 
 
-def build_wsgi_app(argv=None):
+def build_wsgi_app(argv=None) -> urlmap.URLMap:
     """[cuongdm]
     Build the WSGI app and return it.
     """
