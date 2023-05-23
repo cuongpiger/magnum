@@ -38,7 +38,6 @@ from magnum.api import expose
 from magnum.api import http_error
 from magnum.i18n import _
 
-
 LOG = logging.getLogger(__name__)
 
 BASE_VERSION = 1
@@ -118,7 +117,7 @@ class V1(controllers_base.APIBase):
                                         'api-spec-v1.html',
                                         bookmark=True, type='text/html')]
         v1.media_types = [MediaType('application/json',
-                          'application/vnd.openstack.magnum.v1+json')]
+                                    'application/vnd.openstack.magnum.v1+json')]
         v1.baymodels = [link.Link.make_link('self', pecan.request.host_url,
                                             'baymodels', ''),
                         link.Link.make_link('bookmark',
@@ -191,7 +190,7 @@ class Controller(controllers_base.Controller):
 
     bays = bay.BaysController()
     baymodels = baymodel.BayModelsController()
-    clusters = cluster.ClustersController()
+    clusters = cluster.ClustersController()  # the cluster controller
     clustertemplates = cluster_template.ClusterTemplatesController()
     quotas = quota.QuotaController()
     certificates = certificate.CertificateController()
@@ -218,9 +217,9 @@ class Controller(controllers_base.Controller):
                 "[%(min)s, %(max)s].") % {'ver': version,
                                           'min': MIN_VER_STR,
                                           'max': MAX_VER_STR},
-                headers=headers,
-                max_version=str(MAX_VER),
-                min_version=str(MIN_VER))
+                                                         headers=headers,
+                                                         max_version=str(MAX_VER),
+                                                         min_version=str(MIN_VER))
         # ensure the minor version is within the supported range
         if version < MIN_VER or version > MAX_VER:
             raise http_error.HTTPNotAcceptableAPIVersion(_(
@@ -228,12 +227,13 @@ class Controller(controllers_base.Controller):
                 "supported by this service. The supported version range is: "
                 "[%(min)s, %(max)s].") % {'ver': version, 'min': MIN_VER_STR,
                                           'max': MAX_VER_STR},
-                headers=headers,
-                max_version=str(MAX_VER),
-                min_version=str(MIN_VER))
+                                                         headers=headers,
+                                                         max_version=str(MAX_VER),
+                                                         min_version=str(MIN_VER))
 
     @pecan.expose()
     def _route(self, args):
+        LOG.debug("route has been called")
         version = ver.Version(
             pecan.request.headers, MIN_VER_STR, MAX_VER_STR)
 

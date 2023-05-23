@@ -13,10 +13,11 @@
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
-
+from magnum.common.context import RequestContext
 from magnum.db import api as dbapi
 from magnum.objects import base
 from magnum.objects import fields as m_fields
+from magnum.db.sqlalchemy import models
 
 
 @base.MagnumObjectRegistry.register
@@ -99,12 +100,13 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
                 db_objects]
 
     @base.remotable_classmethod
-    def get(cls, context, cluster_template_id):
-        """Find and return ClusterTemplate object based on its id or uuid.
+    def get(cls, context: RequestContext, cluster_template_id: str):
+        """Find and return `ClusterTemplate` object based on its `id` or `uuid`.
 
         :param cluster_template_id: the id *or* uuid of a ClusterTemplate.
         :param context: Security context
-        :returns: a :class:`ClusterTemplate` object.
+
+        :returns: a `ClusterTemplate` object.
         """
         if strutils.is_int_like(cluster_template_id):
             return cls.get_by_id(context, cluster_template_id)
@@ -114,17 +116,16 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
             return cls.get_by_name(context, cluster_template_id)
 
     @base.remotable_classmethod
-    def get_by_id(cls, context, cluster_template_id):
-        """Find and return ClusterTemplate object based on its integer id.
+    def get_by_id(cls, context: RequestContext, cluster_template_id: int):
+        """Find and return `ClusterTemplate` object based on its integer `id`.
 
-        :param cluster_template_id: the id of a ClusterTemplate.
-        :param context: Security context
+        :param cluster_template_id: the `id` of a :class:`ClusterTemplate`
+        :param context: security context :class:`RequestContext`
+
         :returns: a :class:`ClusterTemplate` object.
         """
-        db_cluster_template = cls.dbapi.get_cluster_template_by_id(
-            context, cluster_template_id)
-        cluster_template = ClusterTemplate._from_db_object(cls(context),
-                                                           db_cluster_template)
+        db_cluster_template: models.ClusterTemplate = cls.dbapi.get_cluster_template_by_id(context, cluster_template_id)
+        cluster_template = ClusterTemplate._from_db_object(cls(context), db_cluster_template)
         return cluster_template
 
     @base.remotable_classmethod
@@ -135,10 +136,8 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
         :param context: Security context
         :returns: a :class:`ClusterTemplate` object.
         """
-        db_cluster_template = cls.dbapi.get_cluster_template_by_uuid(
-            context, uuid)
-        cluster_template = ClusterTemplate._from_db_object(cls(context),
-                                                           db_cluster_template)
+        db_cluster_template = cls.dbapi.get_cluster_template_by_uuid(context, uuid)
+        cluster_template = ClusterTemplate._from_db_object(cls(context), db_cluster_template)
         return cluster_template
 
     @base.remotable_classmethod

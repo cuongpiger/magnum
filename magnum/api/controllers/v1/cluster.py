@@ -14,16 +14,17 @@
 #    under the License.
 
 import uuid
-
-from oslo_log import log as logging
-from oslo_utils import strutils
-from oslo_utils import timeutils
 import pecan
 import six
 import warnings
 import wsme
+import magnum.conf
+from oslo_log import log as logging
+from oslo_utils import strutils
+from oslo_utils import timeutils
 from wsme import types as wtypes
-
+from typing import List
+from magnum.common.context import RequestContext
 from magnum.api import attr_validator
 from magnum.api.controllers import base
 from magnum.api.controllers import link
@@ -31,13 +32,13 @@ from magnum.api.controllers.v1 import cluster_actions
 from magnum.api.controllers.v1 import collection
 from magnum.api.controllers.v1 import nodegroup
 from magnum.api.controllers.v1 import types
+from magnum.api.controllers.v1 import cluster as _cluster
 from magnum.api import expose
 from magnum.api import utils as api_utils
 from magnum.api import validation
 from magnum.common import exception
 from magnum.common import name_generator
 from magnum.common import policy
-import magnum.conf
 from magnum.i18n import _
 from magnum import objects
 from magnum.objects import fields
@@ -166,18 +167,18 @@ class Cluster(base.APIBase):
     """Indicates whether the labels will be merged with the CT labels."""
 
     labels_overridden = wtypes.DictType(
-            wtypes.text, types.MultiType(
-                wtypes.text, six.integer_types, bool, float))
+        wtypes.text, types.MultiType(
+            wtypes.text, six.integer_types, bool, float))
     """Contains labels that have a value different than the parent labels."""
 
     labels_added = wtypes.DictType(
-            wtypes.text, types.MultiType(
-                wtypes.text, six.integer_types, bool, float))
+        wtypes.text, types.MultiType(
+            wtypes.text, six.integer_types, bool, float))
     """Contains labels that do not exist in the parent."""
 
     labels_skipped = wtypes.DictType(
-            wtypes.text, types.MultiType(
-                wtypes.text, six.integer_types, bool, float))
+        wtypes.text, types.MultiType(
+            wtypes.text, six.integer_types, bool, float))
     """Contains labels that exist in the parent but were not inherited."""
 
     master_lb_enabled = wsme.wsattr(types.boolean)
@@ -287,7 +288,7 @@ class ClusterCollection(collection.Collection):
         self._type = 'clusters'
 
     @staticmethod
-    def convert_with_links(rpc_clusters, limit, url=None, expand=False,
+    def convert_with_links(rpc_clusters: List[Cluster], limit, url=None, expand=False,
                            **kwargs):
         collection = ClusterCollection()
         collection.clusters = [Cluster.convert_with_links(p, expand)
@@ -306,6 +307,7 @@ class ClustersController(base.Controller):
     """REST controller for Clusters."""
 
     def __init__(self):
+        LOG.debug('Creating ClustersController')
         super(ClustersController, self).__init__()
 
     _custom_actions = {
@@ -326,11 +328,11 @@ class ClustersController(base.Controller):
         name = name_gen.generate()
         return name + '-cluster'
 
-    def _get_clusters_collection(self, marker, limit,
+    def _get_clusters_collection(self, marker, limit: int,
                                  sort_key, sort_dir, expand=False,
                                  resource_url=None):
-
-        context = pecan.request.context
+        LOG.debug('Getting all clusters collection for user')
+        context: RequestContext = pecan.request.context
         if context.is_admin:
             if expand:
                 policy.enforce(context, "cluster:detail_all_projects",
@@ -349,6 +351,7 @@ class ClustersController(base.Controller):
 
         limit = api_utils.validate_limit(limit)
         sort_dir = api_utils.validate_sort_dir(sort_dir)
+        LOG.debug("pass the validate")
 
         marker_obj = None
         if marker:
@@ -378,7 +381,8 @@ class ClustersController(base.Controller):
         :param sort_key: column to sort results by. Default: id.
         :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
         """
-        context = pecan.request.context
+        LOG.debug("List all clusters has been called")
+        context: RequestContext = pecan.request.context
         policy.enforce(context, 'cluster:get_all',
                        action='cluster:get_all')
         return self._get_clusters_collection(marker, limit, sort_key,
@@ -451,13 +455,10 @@ class ClustersController(base.Controller):
 
         return api_cluster
 
-    def _check_cluster_quota_limit(self, context):
+    def _check_cluster_quota_limit(self, context: RequestContext):
         try:
             # Check if there is any explicit quota limit set in Quotas table
-            quota = objects.Quota.get_quota_by_project_id_resource(
-                context,
-                context.project_id,
-                'Cluster')
+            quota = objects.Quota.get_quota_by_project_id_resource(context, context.project_id, 'Cluster')
             cluster_limit = quota.hard_limit
         except exception.QuotaNotFound:
             # If explicit quota was not set for the project, use default limit
@@ -474,7 +475,7 @@ class ClustersController(base.Controller):
     @validation.ct_not_found_to_bad_request()
     @validation.enforce_cluster_type_supported()
     @validation.enforce_cluster_volume_storage_size()
-    def post(self, cluster):
+    def post(self, cluster: _cluster.Cluster):
         if cluster.node_count == 0:
             raise exception.ZeroNodeCountNotSupported()
         return self._post(cluster)
@@ -483,21 +484,20 @@ class ClustersController(base.Controller):
     @expose.expose(ClusterID, body=Cluster, status_code=202)
     @validation.enforce_cluster_type_supported()
     @validation.enforce_cluster_volume_storage_size()
-    def post(self, cluster):  # noqa
+    def post(self, cluster: _cluster.Cluster):  # noqa
         return self._post(cluster)
 
-    def _post(self, cluster):
+    def _post(self, cluster: _cluster.Cluster):
         """Create a new cluster.
 
         :param cluster: a cluster within the request body.
         """
-        context = pecan.request.context
-        policy.enforce(context, 'cluster:create',
-                       action='cluster:create')
+        context: RequestContext = pecan.request.context
+        policy.enforce(context, 'cluster:create', action='cluster:create')
 
         self._check_cluster_quota_limit(context)
 
-        temp_id = cluster.cluster_template_id
+        temp_id: str = cluster.cluster_template_id
         cluster_template = objects.ClusterTemplate.get(context, temp_id)
         # We are not sure if we got a uuid or name here. So just set
         # explicitly the uuid of the cluster template in the cluster.
@@ -552,7 +552,7 @@ class ClustersController(base.Controller):
         # NOTE(yuywz): We will generate a random human-readable name for
         # cluster if the name is not specified by user.
         name = cluster_dict.get('name') or \
-            self._generate_name_for_cluster(context)
+               self._generate_name_for_cluster(context)
         cluster_dict['name'] = name
         cluster_dict['coe_version'] = None
         cluster_dict['container_version'] = None

@@ -23,14 +23,15 @@ import six
 
 from magnum.common import profiler
 
-
 _BACKEND_MAPPING = {'sqlalchemy': 'magnum.db.sqlalchemy.api'}
-IMPL = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING,
-                                lazy=True)
+IMPL: db_api.DBAPI = db_api.DBAPI.from_config(cfg.CONF, backend_mapping=_BACKEND_MAPPING, lazy=True)
 
 
-def get_instance():
-    """Return a DB API instance."""
+def get_instance() -> db_api.DBAPI:
+    """Return a `DBAPI` instance.
+
+    :return: a `DBAPI` instance.
+    """
     return IMPL
 
 

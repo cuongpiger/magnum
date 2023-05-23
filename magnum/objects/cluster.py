@@ -13,7 +13,7 @@
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
-
+from oslo_db.api import DBAPI
 from magnum.common import exception
 from magnum.db import api as dbapi
 from magnum.objects import base
@@ -60,7 +60,7 @@ class Cluster(base.MagnumPersistentObject, base.MagnumObject,
 
     VERSION = '1.23'
 
-    dbapi = dbapi.get_instance()
+    dbapi: DBAPI = dbapi.get_instance()
 
     fields = {
         'id': fields.IntegerField(),
@@ -249,6 +249,7 @@ class Cluster(base.MagnumPersistentObject, base.MagnumObject,
                                                  sort_key=sort_key,
                                                  sort_dir=sort_dir,
                                                  filters=filters)
+
         return Cluster._from_db_object_list(db_clusters, cls, context)
 
     @base.remotable_classmethod
