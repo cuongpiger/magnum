@@ -1,14 +1,9 @@
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#
-#        http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+"""
+FUNCTIONS:
+- build_wsgi_app(argv=None)
+- load_app()
+
+"""
 
 import os
 import sys
@@ -16,22 +11,27 @@ import pecan
 import magnum.conf
 from oslo_config import cfg
 from oslo_log import log
-from paste import deploy
+from paste import deploy, urlmap
+from typing import Optional
 from magnum.common import profiler
 from magnum.api import config as api_config
 from magnum.api import middleware
 from magnum.common import config as common_config
 from magnum.common import service
 
-CONF = magnum.conf.CONF
-
+CONF: cfg.ConfigOpts = magnum.conf.CONF
 LOG = log.getLogger(__name__)
 
 
-def get_pecan_config():
-    # Set up the pecan configuration
+def get_pecan_config() -> pecan.configuration.Config:
+    """
+    [cuongdm]
+    Set up the Pecan configuration including the pecan configuration file
+    """
     filename = api_config.__file__.replace('.pyc', '.py')
-    return pecan.configuration.conf_from_file(filename)
+    LOG.debug("Using Pecan config file %s" % filename)
+    config: pecan.configuration.Config = pecan.configuration.conf_from_file(filename)
+    return config
 
 
 def setup_app(config=None):
@@ -52,10 +52,14 @@ def setup_app(config=None):
     return app
 
 
-def load_app():
-    cfg_file = None
-    cfg_path = CONF.api.api_paste_config
-    LOG.info(f"The profiler config is: {CONF.profiler.http_request_tracing_token}")
+def load_app() -> urlmap.URLMap:
+    """[cuongdm]
+    Read the api-paste.ini file and return the WSGI app
+
+    return: WSGI application
+    """
+    cfg_file: Optional[str] = None
+    cfg_path: str = CONF.api.api_paste_config  # get the api-paste.ini file from magnum.conf
     if not os.path.isabs(cfg_path):
         cfg_file = CONF.find_file(cfg_path)
     elif os.path.exists(cfg_path):
@@ -63,15 +67,22 @@ def load_app():
 
     if not cfg_file:
         raise cfg.ConfigFilesNotFoundError([CONF.api.api_paste_config])
-    LOG.info("Full WSGI config used: %s", cfg_file)
-    profiler.setup('magnum-api', CONF.host)
-    return deploy.loadapp("config:" + cfg_file)
+
+    LOG.info("The WSGI config file is at %s", cfg_file)
+    wsgi_app: urlmap.URLMap = deploy.loadapp("config:" + cfg_file)
+    return wsgi_app
 
 
 def app_factory(global_config, **local_conf):
+    print("app_factory has been called")
     return setup_app()
 
 
 def build_wsgi_app(argv=None):
-    service.prepare_service(sys.argv)
-    return load_app()
+    """[cuongdm]
+    Build the WSGI app and return it.
+    """
+    service.prepare_service(sys.argv)  # set up logging and config variables
+    wsgi_app = load_app()
+    profiler.setup('magnum-api', CONF.host)  # set up OSprofiler plugins
+    return wsgi_app

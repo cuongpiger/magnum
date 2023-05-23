@@ -30,7 +30,6 @@ profiler_web = importutils.try_import("osprofiler.web")
 
 
 CONF = magnum.conf.CONF
-
 LOG = logging.getLogger(__name__)
 
 
@@ -55,15 +54,21 @@ class WsgiMiddleware(object):
         return request.get_response(self.application)
 
 
-def setup(binary, host):
+def setup(service: str, host: str):
+    """[cuongdm]
+    Setup OSprofiler notifier and enable profiling.
+
+    :param service: The name of the service, such as wsgi, db, rpc, etc.
+    :param host: The machine hostname
+    """
     if hasattr(CONF, 'profiler') and CONF.profiler.enabled:
         profiler_initializer.init_from_conf(
             conf=CONF,
             context=context.get_admin_context().to_dict(),
             project="magnum",
-            service=binary,
+            service=service,
             host=host)
-        LOG.info("OSprofiler is enabled.")
+        LOG.info("OSprofiler is enabled")
 
 
 def trace_cls(name, **kwargs):

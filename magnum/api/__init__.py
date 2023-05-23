@@ -13,4 +13,5 @@ import paste.urlmap
 
 
 def root_app_factory(loader, global_conf, **local_conf):
+    print(f"root_app_factory has been called {local_conf} {global_conf} {loader}")
     return paste.urlmap.urlmap_factory(loader, global_conf, **local_conf)

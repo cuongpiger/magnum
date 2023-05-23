@@ -10,12 +10,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import magnum.conf
 from eventlet.green import threading
 from oslo_context import context
-
 from magnum.common import policy
-
-import magnum.conf
+from typing import Optional
 
 CONF = magnum.conf.CONF
 
@@ -24,9 +23,9 @@ class RequestContext(context.RequestContext):
     """Extends security contexts from the OpenStack common library."""
 
     def __init__(self, auth_token=None, auth_url=None, domain_id=None,
-                 domain_name=None, user_name=None, user_id=None,
+                 domain_name=None, user_name=None, user_id: Optional[str] = None,
                  user_domain_name=None, user_domain_id=None,
-                 project_name=None, project_id=None, roles=None,
+                 project_name=None, project_id: Optional[str] = None, roles=None,
                  is_admin=None, read_only=False, show_deleted=False,
                  request_id=None, trust_id=None, auth_token_info=None,
                  all_tenants=False, password=None, **kwargs):
@@ -150,7 +149,7 @@ def set_ctx(new_ctx):
         setattr(context._request_store, 'context', new_ctx)
 
 
-def get_admin_context(read_deleted="no"):
+def get_admin_context(read_deleted="no") -> RequestContext:
     # NOTE(tovin07): This method should only be used when an admin context is
     # necessary for the entirety of the context lifetime.
     return RequestContext(user_id=None,

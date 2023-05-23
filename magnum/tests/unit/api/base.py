@@ -1,29 +1,35 @@
-# Copyright 2013 Hewlett-Packard Development Company, L.P.
-# All Rights Reserved.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+"""
+VARIABLES:
+- PATH_PREFIX = '/v1'
 
-# NOTE: Ported from ceilometer/tests/api.py (subsequently moved to
-# ceilometer/tests/api/__init__.py). This should be oslo'ified:
-# https://bugs.launchpad.net/ironic/+bug/1255115.
+CLASSES:
+- FunctionalTest(base.DbTestCase):
+    + setUp(self)
+    + _verify_attrs(self, attrs, response, positive=True)
+    + _make_app(self, config=None)
+    + _request_json(self, path, params, expect_errors=False, headers=None,
+                      method="post", extra_environ=None, status=None,
+                      path_prefix=PATH_PREFIX)
+    + put_json(self, path, params, expect_errors=False, headers=None,
+                 extra_environ=None, status=None)
+    + post_json(self, path, params, expect_errors=False, headers=None,
+                  extra_environ=None, status=None)
+    + patch_json(self, path, params, expect_errors=False, headers=None,
+                   extra_environ=None, status=None)
+    + delete(self, path, expect_errors=False, headers=None,
+               extra_environ=None, status=None, path_prefix=PATH_PREFIX)
+    + get_json(self, path, expect_errors=False, headers=None,
+                 extra_environ=None, q=None, path_prefix=PATH_PREFIX,
+                 **params):
+    + validate_link(self, link, bookmark=False):
+"""
 
-# NOTE(deva): import auth_token so we can override a config option
-from unittest import mock
-
-from keystonemiddleware import auth_token  # noqa
-from oslo_config import cfg
 import pecan
 import pecan.testing
+
+from oslo_config import cfg
+from unittest import mock
+from keystonemiddleware import auth_token  # noqa
 from six.moves.urllib import parse as urlparse
 
 from magnum.api import hooks
