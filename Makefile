@@ -4,5 +4,8 @@ run-api-uwsgi:
 stop-api-uwsgi:
 	@./cmd/run.sh stop-api-uwsgi
 
+flog-api-uwsgi:
+	@./cmd/run.sh flog-api-uwsgi
+
 run-api:
 	@./cmd/run.sh start-api
