@@ -13,17 +13,21 @@
 # under the License.
 
 """SQLAlchemy storage backend."""
+from typing import Union
+
 import six
 
 from oslo_db import exception as db_exc
 from oslo_db.sqlalchemy import session as db_session
 from oslo_db.sqlalchemy import utils as db_utils
+from oslo_db.sqlalchemy.orm import Query
 from oslo_log import log
 from oslo_utils import importutils
 from oslo_utils import strutils
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 import sqlalchemy as sa
+from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import MultipleResultsFound
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql import func
@@ -63,7 +67,7 @@ def get_engine():
     return facade.get_engine()
 
 
-def get_session(**kwargs):
+def get_session(**kwargs) -> Session:
     facade = _create_facade_lazily()
     return facade.get_session(**kwargs)
 
@@ -73,14 +77,9 @@ def get_backend():
     return Connection()
 
 
-def model_query(model, *args, **kwargs):
-    """Query helper for simpler session usage.
-
-    :param session: if present, the session to use
-    """
-
-    session = kwargs.get('session') or get_session()
-    query = session.query(model, *args)
+def model_query(model, *args, **kwargs) -> Query:
+    session: Session = kwargs.get('session') or get_session()
+    query: Query = session.query(model, *args)
     return query
 
 
@@ -125,7 +124,7 @@ class Connection(api.Connection):
     def __init__(self):
         pass
 
-    def _add_tenant_filters(self, context, query):
+    def _add_tenant_filters(self, context, query) -> Query:
         if context.is_admin and context.all_tenants:
             return query
 
@@ -353,18 +352,39 @@ class Connection(api.Connection):
             raise exception.ClusterTemplateNotFound(
                 clustertemplate=cluster_template_id)
 
-    def get_cluster_template_by_uuid(self, context, cluster_template_uuid):
-        query = model_query(models.ClusterTemplate)
+    def get_cluster_template_by_uuid(self, context, cluster_template_uuid: str) -> \
+            Union[models.ClusterTemplate, exception.ClusterTemplateNotFound]:
+        """[cuongdm]
+        Get a :class:`ClusterTemplate` object via its `uuid`.
+
+        Parameters
+        ----------
+        context : magnum.common.context.RequestContext
+            The request context, for access checks.
+        cluster_template_uuid : str
+            The uuid of a cluster template you want to get.
+
+        Returns
+        -------
+        ClusterTemplate
+            A :class:`ClusterTemplate` object.
+
+        Raises
+        ------
+        ClusterTemplateNotFound
+            If no cluster template with the specified `uuid` was found.
+        """
+
+        query: Query = model_query(models.ClusterTemplate)
         query = self._add_tenant_filters(context, query)
         public_q = model_query(models.ClusterTemplate).filter_by(public=True)
         query = query.union(public_q)
-        query = query.filter(
-                models.ClusterTemplate.uuid == cluster_template_uuid)
+        query = query.filter(models.ClusterTemplate.uuid == cluster_template_uuid)
+
         try:
             return query.one()
         except NoResultFound:
-            raise exception.ClusterTemplateNotFound(
-                clustertemplate=cluster_template_uuid)
+            raise exception.ClusterTemplateNotFound(clustertemplate=cluster_template_uuid)
 
     def get_cluster_template_by_name(self, context, cluster_template_name):
         query = model_query(models.ClusterTemplate)
@@ -372,7 +392,7 @@ class Connection(api.Connection):
         public_q = model_query(models.ClusterTemplate).filter_by(public=True)
         query = query.union(public_q)
         query = query.filter(
-                models.ClusterTemplate.name == cluster_template_name)
+            models.ClusterTemplate.name == cluster_template_name)
         try:
             return query.one()
         except MultipleResultsFound:
@@ -387,7 +407,7 @@ class Connection(api.Connection):
         """Checks whether the ClusterTemplate is referenced by cluster(s)."""
         query = model_query(models.Cluster, session=session)
         query = self._add_clusters_filters(query, {'cluster_template_id':
-                                                   cluster_template_uuid})
+                                                       cluster_template_uuid})
         return query.count() != 0
 
     def _is_publishing_cluster_template(self, values):

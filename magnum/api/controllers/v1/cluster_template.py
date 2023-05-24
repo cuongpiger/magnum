@@ -240,11 +240,10 @@ class ClusterTemplateCollection(collection.Collection):
 
     @staticmethod
     def convert_with_links(rpc_cluster_templates, limit, url=None, **kwargs):
-        collection = ClusterTemplateCollection()
-        collection.clustertemplates = [ClusterTemplate.convert_with_links(p)
-                                       for p in rpc_cluster_templates]
-        collection.next = collection.get_next(limit, url=url, **kwargs)
-        return collection
+        collection_ = ClusterTemplateCollection()
+        collection_.clustertemplates = [ClusterTemplate.convert_with_links(p) for p in rpc_cluster_templates]
+        collection_.next = collection_.get_next(limit, url=url, **kwargs)
+        return collection_
 
     @classmethod
     def sample(cls):
@@ -277,7 +276,7 @@ class ClusterTemplatesController(base.Controller):
 
     def _get_cluster_templates_collection(self, marker: Optional[str], limit: Optional[int],
                                           sort_key: str, sort_dir: str,
-                                          resource_url=None):
+                                          resource_url: Optional[str] = None):
 
         context: RequestContext = pecan.request.context
         if context.is_admin:
@@ -296,17 +295,15 @@ class ClusterTemplatesController(base.Controller):
             # can list clusters for a particular project.
             context.all_tenants = True
 
-        limit = api_utils.validate_limit(limit)
-        sort_dir = api_utils.validate_sort_dir(sort_dir)
+        limit: int = api_utils.validate_limit(limit)
+        sort_dir: str = api_utils.validate_sort_dir(sort_dir)
 
-        marker_obj = None
+        marker_obj: Optional[ClusterTemplate] = None
         if marker:
-            marker_obj = objects.ClusterTemplate.get_by_uuid(
-                pecan.request.context, marker)
+            marker_obj = objects.ClusterTemplate.get_by_uuid(pecan.request.context, marker)
 
-        cluster_templates = objects.ClusterTemplate.list(
-            pecan.request.context, limit, marker_obj, sort_key=sort_key,
-            sort_dir=sort_dir)
+        cluster_templates = objects.ClusterTemplate.list(pecan.request.context, limit, marker_obj,
+                                                         sort_key=sort_key, sort_dir=sort_dir)
 
         return ClusterTemplateCollection.convert_with_links(cluster_templates,
                                                             limit,

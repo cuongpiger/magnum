@@ -116,7 +116,7 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
             return cls.get_by_name(context, cluster_template_id)
 
     @base.remotable_classmethod
-    def get_by_id(cls, context: RequestContext, cluster_template_id: int):
+    def get_by_id(cls, context: RequestContext, cluster_template_id: int):  # noqa
         """Find and return `ClusterTemplate` object based on its integer `id`.
 
         :param cluster_template_id: the `id` of a :class:`ClusterTemplate`
@@ -125,19 +125,29 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
         :returns: a :class:`ClusterTemplate` object.
         """
         db_cluster_template: models.ClusterTemplate = cls.dbapi.get_cluster_template_by_id(context, cluster_template_id)
-        cluster_template = ClusterTemplate._from_db_object(cls(context), db_cluster_template)
+        cluster_template: ClusterTemplate = ClusterTemplate._from_db_object(cls(context), db_cluster_template)
         return cluster_template
 
     @base.remotable_classmethod
-    def get_by_uuid(cls, context, uuid):
-        """Find and return ClusterTemplate object based on uuid.
+    def get_by_uuid(cls, context: RequestContext, uuid: str) -> 'ClusterTemplate':  # noqa
+        """Find and return :class:`ClusterTemplate` object based on `uuid`.
 
-        :param uuid: the uuid of a ClusterTemplate.
-        :param context: Security context
-        :returns: a :class:`ClusterTemplate` object.
+        Parameters
+        ----------
+        context : RequestContext
+            Security context
+        uuid : str
+            the uuid of a :class:`ClusterTemplate`.
+
+        Returns
+        -------
+        ClusterTemplate
+            a :class:`ClusterTemplate` object.
         """
+
         db_cluster_template = cls.dbapi.get_cluster_template_by_uuid(context, uuid)
         cluster_template = ClusterTemplate._from_db_object(cls(context), db_cluster_template)
+        print(f"type of the cluster_template is {type(cluster_template)}")
         return cluster_template
 
     @base.remotable_classmethod

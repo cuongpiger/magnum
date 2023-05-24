@@ -26,7 +26,6 @@ from magnum.common import clients
 from magnum.common import exception
 from magnum.common import policies
 
-
 _ENFORCER = None
 CONF = cfg.CONF
 
@@ -73,9 +72,7 @@ def init(policy_file=None, rules=None,
     return _ENFORCER
 
 
-def enforce(context, rule=None, target=None,
-            do_raise=True, exc=None, *args, **kwargs):
-
+def enforce(context, rule=None, target=None, do_raise=True, exc=None, *args, **kwargs):
     """Checks authorization of a rule against the target and credentials.
 
         :param dict context: As much information about the user performing the
