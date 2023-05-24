@@ -19,6 +19,7 @@ from magnum.common import clients
 from magnum.common import exception
 from magnum.drivers.common import driver
 from magnum.api import utils as api_utils
+from magnum.objects.cluster_template import ClusterTemplate
 
 CONF = magnum.conf.CONF
 
@@ -44,11 +45,9 @@ def enforce_cluster_type_supported():
     @decorator.decorator
     def wrapper(func, *args, **kwargs):
         cluster = args[1]
-        cluster_template = objects.ClusterTemplate.get(
+        cluster_template: ClusterTemplate = objects.ClusterTemplate.get(
             pecan.request.context, cluster.cluster_template_id)
-        cluster_type = (cluster_template.server_type,
-                        cluster_template.cluster_distro,
-                        cluster_template.coe)
+        cluster_type = (cluster_template.server_type, cluster_template.cluster_distro, cluster_template.coe)
         driver.Driver.get_driver(*cluster_type)
         return func(*args, **kwargs)
 
@@ -85,8 +84,7 @@ def enforce_cluster_volume_storage_size():
         cluster = args[1]
         cluster_template = objects.ClusterTemplate.get(
             pecan.request.context, cluster.cluster_template_id)
-        _enforce_volume_storage_size(
-            cluster_template.as_dict(), cluster.as_dict())
+        _enforce_volume_storage_size(cluster_template.as_dict(), cluster.as_dict())
         return func(*args, **kwargs)
 
     return wrapper

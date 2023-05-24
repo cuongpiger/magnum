@@ -9,10 +9,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from typing import Union
 
 from oslo_utils import strutils
 from oslo_utils import uuidutils
 from oslo_versionedobjects import fields
+
 from magnum.common.context import RequestContext
 from magnum.db import api as dbapi
 from magnum.objects import base
@@ -100,7 +102,7 @@ class ClusterTemplate(base.MagnumPersistentObject, base.MagnumObject,
                 db_objects]
 
     @base.remotable_classmethod
-    def get(cls, context: RequestContext, cluster_template_id: str):
+    def get(cls, context: RequestContext, cluster_template_id: Union[str, int]):
         """Find and return `ClusterTemplate` object based on its `id` or `uuid`.
 
         :param cluster_template_id: the id *or* uuid of a ClusterTemplate.

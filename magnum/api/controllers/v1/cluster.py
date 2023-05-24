@@ -300,7 +300,6 @@ class ClustersController(base.Controller):
     """REST controller for Clusters."""
 
     def __init__(self):
-        LOG.debug('Creating ClustersController')
         super(ClustersController, self).__init__()
 
     _custom_actions = {
@@ -478,6 +477,11 @@ class ClustersController(base.Controller):
     @validation.enforce_cluster_type_supported()
     @validation.enforce_cluster_volume_storage_size()
     def post(self, cluster: _cluster.Cluster):  # noqa
+        """[cuongdm]
+        Create a new cluster.
+        """
+
+        print(f"the type of cluster is {type(cluster)}")
         return self._post(cluster)
 
     def _post(self, cluster: _cluster.Cluster):
@@ -487,7 +491,6 @@ class ClustersController(base.Controller):
         """
         context: RequestContext = pecan.request.context
         policy.enforce(context, 'cluster:create', action='cluster:create')
-
         self._check_cluster_quota_limit(context)
 
         temp_id: str = cluster.cluster_template_id

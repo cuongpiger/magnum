@@ -86,7 +86,7 @@ class Driver(object):
         return cls.definitions
 
     @classmethod
-    def get_driver(cls, server_type, os, coe):
+    def get_driver(cls, server_type: str, os: str, coe: str):
         """Get Driver.
 
         Returns the Driver class for the provided cluster_type.

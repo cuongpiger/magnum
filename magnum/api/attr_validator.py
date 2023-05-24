@@ -77,7 +77,7 @@ def validate_keypair(cli, keypair):
 
 def validate_external_network(cli, external_network):
     """Validate external network"""
-
+    print("validate_external_network")
     count = 0
     ext_filter = {'router:external': True}
     networks = cli.neutron().list_networks(**ext_filter)
