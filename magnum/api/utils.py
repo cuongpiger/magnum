@@ -15,30 +15,43 @@
 
 import ast
 import jsonpatch
-from oslo_utils import uuidutils
 import pecan
-import wsme
+import magnum.conf
 
+from oslo_utils import uuidutils
+from wsme import exc
 from magnum.common import exception
 from magnum.common import utils
-import magnum.conf
 from magnum.i18n import _
 from magnum import objects
+from typing import Optional
 
 CONF = magnum.conf.CONF
-
-
-JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException,
-                        jsonpatch.JsonPointerException,
-                        KeyError)
-
-
+JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException, jsonpatch.JsonPointerException, KeyError)
 DOCKER_MINIMUM_MEMORY = 4 * 1024 * 1024
 
 
-def validate_limit(limit):
+def validate_limit(limit: Optional[int]) -> int:
+    """[cuongdm]
+    Validate and return the limit value as an integer.
+
+    Parameters
+    ----------
+    limit : Optional[int]
+        The limit value.
+
+    Returns
+    -------
+    int
+        The limit value as an integer.
+
+    Raises
+    ------
+    exc.ClientSideError
+        If the limit parameter is negative.
+    """
     if limit is not None and limit <= 0:
-        raise wsme.exc.ClientSideError(_("Limit must be positive"))
+        raise exc.ClientSideError(_("Limit must be positive"))
 
     if limit is not None:
         return min(CONF.api.max_limit, limit)
@@ -48,9 +61,9 @@ def validate_limit(limit):
 
 def validate_sort_dir(sort_dir):
     if sort_dir not in ['asc', 'desc']:
-        raise wsme.exc.ClientSideError(_("Invalid sort direction: %s. "
-                                         "Acceptable values are "
-                                         "'asc' or 'desc'") % sort_dir)
+        raise exc.ClientSideError(_("Invalid sort direction: %s. "
+                                    "Acceptable values are "
+                                    "'asc' or 'desc'") % sort_dir)
     return sort_dir
 
 
@@ -59,14 +72,14 @@ def validate_docker_memory(mem_str):
     try:
         mem = utils.get_docker_quantity(mem_str)
     except exception.UnsupportedDockerQuantityFormat:
-        raise wsme.exc.ClientSideError(_("Invalid docker memory specified. "
-                                         "Acceptable values are format: "
-                                         "<number>[<unit>],"
-                                         "where unit = b, k, m or g"))
+        raise exc.ClientSideError(_("Invalid docker memory specified. "
+                                    "Acceptable values are format: "
+                                    "<number>[<unit>],"
+                                    "where unit = b, k, m or g"))
     if mem < DOCKER_MINIMUM_MEMORY:
-        raise wsme.exc.ClientSideError(_("Docker Minimum memory limit "
-                                         "allowed is %d B.")
-                                       % DOCKER_MINIMUM_MEMORY)
+        raise exc.ClientSideError(_("Docker Minimum memory limit "
+                                    "allowed is %d B.")
+                                  % DOCKER_MINIMUM_MEMORY)
 
 
 def apply_jsonpatch(doc, patch):
@@ -76,11 +89,11 @@ def apply_jsonpatch(doc, patch):
             if attr not in doc:
                 msg = _("Adding a new attribute %s to the root of "
                         "the resource is not allowed.") % p['path']
-                raise wsme.exc.ClientSideError(msg)
+                raise exc.ClientSideError(msg)
             if doc[attr] is not None:
                 msg = _("The attribute %s has existed, please use "
                         "'replace' operation instead.") % p['path']
-                raise wsme.exc.ClientSideError(msg)
+                raise exc.ClientSideError(msg)
 
         if (p['op'] == 'replace' and (p['path'] == '/labels' or
                                       p['path'] == '/health_status_reason')):

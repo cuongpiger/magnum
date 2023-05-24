@@ -19,7 +19,7 @@ import six
 import warnings
 import wsme
 from wsme import types as wtypes
-
+from typing import Optional
 from magnum.api import attr_validator
 from magnum.api.controllers import base
 from magnum.api.controllers import link
@@ -32,6 +32,7 @@ from magnum.common import clients
 from magnum.common import exception
 from magnum.common import name_generator
 from magnum.common import policy
+from magnum.common.context import RequestContext
 from magnum import objects
 from magnum.objects import fields
 
@@ -274,11 +275,11 @@ class ClusterTemplatesController(base.Controller):
         name = name_gen.generate()
         return name + '-template'
 
-    def _get_cluster_templates_collection(self, marker, limit,
-                                          sort_key, sort_dir,
+    def _get_cluster_templates_collection(self, marker: Optional[str], limit: Optional[int],
+                                          sort_key: str, sort_dir: str,
                                           resource_url=None):
 
-        context = pecan.request.context
+        context: RequestContext = pecan.request.context
         if context.is_admin:
             if resource_url == '/'.join(['clustertemplates', 'detail']):
                 policy.enforce(context, "clustertemplate:detail_all_projects",
@@ -315,20 +316,25 @@ class ClusterTemplatesController(base.Controller):
 
     @expose.expose(ClusterTemplateCollection, types.uuid, int, wtypes.text,
                    wtypes.text)
-    def get_all(self, marker=None, limit=None, sort_key='id',
-                sort_dir='asc'):
-        """Retrieve a list of ClusterTemplates.
+    def get_all(self, marker: Optional[str] = None, limit: Optional[int] = None, sort_key: str = 'id', sort_dir='asc'):
+        """[cuongdm]
+        Retrieve a list of :class:`ClusterTemplates`.
 
-        :param marker: pagination marker for large data sets.
-        :param limit: maximum number of resources to return in a single result.
-        :param sort_key: column to sort results by. Default: id.
-        :param sort_dir: direction to sort. "asc" or "desc". Default: asc.
+        Parameters
+        ----------
+        marker: Optional[str]
+            Pagination marker for large data sets. This is the `id` of :class:`ClusterTemplates`
+        limit: Optional[int]
+            Maximum number of resources to return in a single result.
+        sort_key: str
+            Column to sort results by. Default: `id`.
+        sort_dir: str
+            Direction to sort. `asc` or `desc`. Default: `asc`.
         """
+
         context = pecan.request.context
-        policy.enforce(context, 'clustertemplate:get_all',
-                       action='clustertemplate:get_all')
-        return self._get_cluster_templates_collection(marker, limit, sort_key,
-                                                      sort_dir)
+        policy.enforce(context, 'clustertemplate:get_all', action='clustertemplate:get_all')  # check policy
+        return self._get_cluster_templates_collection(marker, limit, sort_key, sort_dir)
 
     @expose.expose(ClusterTemplateCollection, types.uuid, int, wtypes.text,
                    wtypes.text)
@@ -440,7 +446,7 @@ class ClusterTemplatesController(base.Controller):
                    body=[ClusterTemplatePatchType])
     @validation.enforce_network_driver_types_update()
     @validation.enforce_volume_driver_types_update()
-    def patch(self, cluster_template_ident, patch):   # noqa
+    def patch(self, cluster_template_ident, patch):  # noqa
         """Update an existing ClusterTemplate.
 
         :param cluster_template_ident: UUID or logic name of a

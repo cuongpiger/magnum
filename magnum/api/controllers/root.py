@@ -21,6 +21,7 @@ from magnum.api.controllers import link
 from magnum.api.controllers import v1
 from magnum.api.controllers import versions
 from magnum.api import expose
+from typing import List
 
 
 class Version(base.APIBase):
@@ -42,19 +43,18 @@ class Version(base.APIBase):
     """The min microversion supported by this version"""
 
     @staticmethod
-    def convert(id, status, max, min):
+    def convert(id_: str, status: str, max_: str, min_: str):
         version = Version()
-        version.id = id
-        version.links = [link.Link.make_link('self', pecan.request.host_url,
-                                             id, '', bookmark=True)]
+        version.id = id_
+        version.links = [link.Link.make_link('self', pecan.request.host_url, id_, '', bookmark=True)]
         version.status = status
-        version.max_version = max
-        version.min_version = min
+        version.max_version = max_
+        version.min_version = min_
+
         return version
 
 
 class Root(base.APIBase):
-
     name = wtypes.text
     """The name of the API"""
 
@@ -68,22 +68,28 @@ class Root(base.APIBase):
     def convert():
         root = Root()
         root.name = "OpenStack Magnum API"
-        root.description = ("Magnum is an OpenStack project which aims to "
-                            "provide container cluster management.")
-        root.versions = [Version.convert('v1', "CURRENT",
-                                         versions.CURRENT_MAX_VER,
-                                         versions.BASE_VER)]
+        root.description = "Magnum is an OpenStack project which aims to provide container cluster management."
+        root.versions = [Version.convert('v1', "CURRENT", versions.CURRENT_MAX_VER, versions.BASE_VER)]
         return root
 
 
 class RootController(rest.RestController):
+    """[cuongdm]
+    Root controller for the Magnum API. All the requests must go through this controller.
 
-    _versions = ['v1']
-    """All supported API versions"""
+    ...
+    Attributes
+    ----------
+    _versions : List[str]
+        All supported API versions
+    _default_version : str
+        The default API version
+    v1 : v1.Controller
+        The controller for the v1 API version because of all the requests always start with /v1
+    """
 
-    _default_version = 'v1'
-    """The default API version"""
-
+    _versions: List[str] = ['v1']
+    _default_version: str = 'v1'
     v1 = v1.Controller()
 
     @expose.expose(Root)
@@ -94,11 +100,14 @@ class RootController(rest.RestController):
         return Root.convert()
 
     @pecan.expose()
-    def _route(self, args):
-        """Overrides the default routing behavior.
+    def _route(self, args: List[str]):
+        """Overrides the default routing behavior. It redirects the request to the default version of the magnum API if
+        the version number is not specified in the url.
 
-        It redirects the request to the default version of the magnum API
-        if the version number is not specified in the url.
+        Parameters
+        ----------
+        args : List[str]
+            The list of arguments in the url, for example if your URL is /v1/clusters, then args = ['v1', 'clusters']
         """
 
         if args[0] and args[0] not in self._versions:
