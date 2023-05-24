@@ -30,6 +30,8 @@ CONF = magnum.conf.CONF
 JSONPATCH_EXCEPTIONS = (jsonpatch.JsonPatchException, jsonpatch.JsonPointerException, KeyError)
 DOCKER_MINIMUM_MEMORY = 4 * 1024 * 1024
 
+_sort_dir = ('asc', 'desc')
+
 
 def validate_limit(limit: Optional[int]) -> int:
     """[cuongdm]
@@ -59,11 +61,29 @@ def validate_limit(limit: Optional[int]) -> int:
         return CONF.api.max_limit
 
 
-def validate_sort_dir(sort_dir):
-    if sort_dir not in ['asc', 'desc']:
-        raise exc.ClientSideError(_("Invalid sort direction: %s. "
-                                    "Acceptable values are "
-                                    "'asc' or 'desc'") % sort_dir)
+def validate_sort_dir(sort_dir: str) -> str:
+    """[cuongdm]
+    Check `sort_dir` parameter value whether it is valid or not. It must equal to 'asc' or 'desc'.
+
+    Parameters
+    ----------
+    sort_dir : str
+        The sort direction value.
+
+    Returns
+    -------
+    str
+        The sort direction value.
+
+    Raises
+    ------
+    exc.ClientSideError
+        If the sort_dir parameter is not equal to 'asc' or 'desc'.
+    """
+
+    if sort_dir not in _sort_dir:
+        raise exc.ClientSideError(_("Invalid sort direction: %s. Acceptable values are 'asc' or 'desc'") % sort_dir)
+
     return sort_dir
 
 
