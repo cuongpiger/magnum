@@ -1,35 +1,42 @@
-# Copyright 2014 IBM Corp.
-#
-#    Licensed under the Apache License, Version 2.0 (the "License"); you may
-#    not use this file except in compliance with the License. You may obtain
-#    a copy of the License at
-#
-#         http://www.apache.org/licenses/LICENSE-2.0
-#
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-#    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-#    License for the specific language governing permissions and limitations
-#    under the License.
+"""
+CLASSES:
+- VersionedMethod
+    + __init__(self, name, start_version, end_version, func)
+    + __str__(self)
+"""
+
+from typing import Callable
 
 
 class VersionedMethod(object):
+    """
+    Versioning information for a single method
 
-    def __init__(self, name, start_version, end_version, func):
-        """Versioning information for a single method
+    ...
+    Attributes
+    ----------
+    name : str
+        Name of the method
+    start_version : str
+        Minimum acceptable version
+    end_version : str
+        Maximum acceptable version
+    func : Callable
+        Method to call
+    """
 
-        @name: Name of the method
-        @start_version: Minimum acceptable version
-        @end_version: Maximum acceptable version
-        @func: Method to call
+    def __init__(self, name: str, start_version: str, end_version: str, func: Callable):
+        """Constructor
 
-        Minimum and maximum are inclusive
+        :param name: Name of the method
+        :param start_version: Minimum acceptable version
+        :param end_version: Maximum acceptable version
+        :param func: Method to call
         """
-        self.name = name
-        self.start_version = start_version
-        self.end_version = end_version
-        self.func = func
+        self.name: str = name
+        self.start_version: str = start_version
+        self.end_version: str = end_version
+        self.func: Callable = func
 
-    def __str__(self):
-        return ("Version Method %s: min: %s, max: %s"
-                % (self.name, self.start_version, self.end_version))
+    def __str__(self) -> str:
+        return "Version Method %s: min: %s, max: %s" % (self.name, self.start_version, self.end_version)

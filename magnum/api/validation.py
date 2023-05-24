@@ -1,33 +1,29 @@
-# Copyright 2015 Huawei Technologies Co.,LTD.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+CLASSES:
+* Validator
+    - Methods:
+        + get_coe_validator(cls, coe: str) -> Union['K8sValidator', 'SwarmValidator', Exception]
 
-import decorator
+"""
+
 import pecan
+import decorator
 import magnum.conf
+
 from keystoneauth1 import exceptions as ka_exception
-from magnum.api import utils as api_utils
+from typing import Set, Union, List, Tuple
+
+from magnum import objects
+from magnum.i18n import _
 from magnum.common import clients
 from magnum.common import exception
 from magnum.drivers.common import driver
-from magnum.i18n import _
-from magnum import objects
+from magnum.api import utils as api_utils
 
 CONF = magnum.conf.CONF
 
-cluster_update_allowed_properties = set(['node_count', 'health_status', 'health_status_reason'])
-federation_update_allowed_properties = set(['member_ids', 'properties'])
+cluster_update_allowed_properties: Set[str] = {'node_count', 'health_status', 'health_status_reason'}
+federation_update_allowed_properties: Set[str] = {'member_ids', 'properties'}
 
 
 def ct_not_found_to_bad_request():
@@ -243,9 +239,24 @@ def validate_federation_properties(delta):
 
 
 class Validator(object):
+    """[cuongdm]
+    Validator for validating cluster template.
+    """
 
     @classmethod
-    def get_coe_validator(cls, coe):
+    def get_coe_validator(cls, coe: str) -> Union['K8sValidator', 'SwarmValidator', Exception]:
+        """[cuongdm] Get validator for `coe` type
+
+        Parameters
+        ----------
+        coe : str
+            COE type, such as kubernetes, swarm, swarm-mode, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If COE type is not supported.
+        """
         if coe == 'kubernetes':
             return K8sValidator()
         elif coe == 'swarm' or coe == 'swarm-mode':
@@ -255,92 +266,224 @@ class Validator(object):
                 _('Requested COE type %s is not supported.') % coe)
 
     @classmethod
-    def validate_network_driver(cls, driver):
-        cls._validate_network_driver_supported(driver)
-        cls._validate_network_driver_allowed(driver)
+    def validate_network_driver(cls, network_driver: str):
+        """[cuongdm]
+        Validate network driver type that admins can use for this COE, including supported and allowed network drivers.
+
+        Parameters
+        ----------
+        network_driver : str
+            Network driver type, such as `flannel`, `calico`, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If network driver is not supported or allowed.
+        """
+
+        cls._validate_network_driver_supported(network_driver)
+        cls._validate_network_driver_allowed(network_driver)
 
     @classmethod
-    def _validate_network_driver_supported(cls, driver):
-        """Confirm that driver is supported by Magnum for this COE."""
-        if driver not in cls.supported_network_drivers:
-            raise exception.InvalidParameterValue(_(
-                'Network driver type %(driver)s is not supported, '
-                'expecting a %(supported_drivers)s network driver.') % {
-                                                      'driver': driver,
-                                                      'supported_drivers': '/'.join(
-                                                          cls.supported_network_drivers + ['unspecified'])})
+    def _validate_network_driver_supported(cls, network_driver: str):
+        """[cuongdm]
+        Confirm that driver is supported by Magnum for this COE.
+
+        Parameters
+        ----------
+        network_driver : str
+            Network driver type, such as `flannel`, `calico`, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If network driver is not supported.
+        """
+
+        if network_driver not in cls.supported_network_drivers:  # noqa
+            raise exception.InvalidParameterValue(
+                _('Network driver type %(driver)s is not supported, expecting a %(supported_drivers)s network driver.')
+                % {'driver': network_driver,
+                   'supported_drivers': '/'.join(cls.supported_network_drivers + ['unspecified'])})  # noqa
 
     @classmethod
-    def _validate_network_driver_allowed(cls, driver):
-        """Confirm that driver is allowed via configuration for this COE."""
-        if ('all' not in cls.allowed_network_drivers and
-                driver not in cls.allowed_network_drivers):
-            raise exception.InvalidParameterValue(_(
-                'Network driver type %(driver)s is not allowed, '
-                'expecting a %(allowed_drivers)s network driver. ') % {
-                                                      'driver': driver,
-                                                      'allowed_drivers': '/'.join(
-                                                          cls.allowed_network_drivers + ['unspecified'])})
+    def _validate_network_driver_allowed(cls, network_driver: str):
+        """[cuongdm]
+        Confirm that driver is allowed via configuration for this COE.
+
+        Parameters
+        ----------
+        network_driver : str
+            Network driver type, such as `flannel`, `calico`, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If network driver is not allowed.
+        """
+
+        if ('all' not in cls.allowed_network_drivers and network_driver not in cls.allowed_network_drivers):  # noqa
+            raise exception.InvalidParameterValue(
+                _('Network driver type %(driver)s is not allowed, expecting a %(allowed_drivers)s network driver. ')
+                % {'driver': network_driver,
+                   'allowed_drivers': '/'.join(cls.allowed_network_drivers + ['unspecified'])})  # noqa
 
     @classmethod
-    def validate_volume_driver(cls, driver):
-        cls._validate_volume_driver_supported(driver)
+    def validate_volume_driver(cls, volume_driver: str):
+        """[cuongdm]
+        Validate volume driver type that admins can support for this COE.
+
+        Parameters
+        ----------
+        volume_driver : str
+            Volume driver type, such as `rexray`, `cinder`, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If volume driver is not supported.
+        """
+        cls._validate_volume_driver_supported(volume_driver)
 
     @classmethod
-    def _validate_volume_driver_supported(cls, driver):
-        """Confirm that volume driver is supported by Magnum for this COE."""
-        if driver not in cls.supported_volume_driver:
-            raise exception.InvalidParameterValue(_(
-                'Volume driver type %(driver)s is not supported, '
-                'expecting a %(supported_volume_driver)s volume driver.') % {
-                                                      'driver': driver,
-                                                      'supported_volume_driver': '/'.join(
-                                                          cls.supported_volume_driver + ['unspecified'])})
+    def _validate_volume_driver_supported(cls, volume_driver: str):
+        """[cuongdm]
+        Confirm that volume driver is supported by Magnum for this COE.
+
+        Parameters
+        ----------
+        volume_driver : str
+            Volume driver type, such as `rexray`, `cinder`, etc.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If volume driver is not supported.
+        """
+
+        if volume_driver not in cls.supported_volume_driver:  # noqa
+            raise exception.InvalidParameterValue(
+                _('Volume driver type %(driver)s is not supported, '
+                  'expecting a %(supported_volume_driver)s volume driver.') % {
+                    'driver': volume_driver,
+                    'supported_volume_driver': '/'.join(
+                        cls.supported_volume_driver + ['unspecified'])})  # noqa
 
     @classmethod
-    def validate_server_type(cls, server_type):
+    def validate_server_type(cls, server_type: str):
+        """[cuongdm]
+        Validate server type that admins can support for this COE.
+
+        Parameters
+        ----------
+        server_type : str
+            Server type, such as `vm` for virtual machine, `bm` for bare metal.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If server type is not supported.
+        """
         cls._validate_server_type(server_type)
 
     @classmethod
-    def _validate_server_type(cls, server_type):
-        """Confirm that server type is supported by Magnum for this COE."""
-        if server_type not in cls.supported_server_types:
-            raise exception.InvalidParameterValue(_(
-                'Server type %(server_type)s is not supported, '
-                'expecting a %(supported_server_types)s server type.') % {
-                                                      'server_type': server_type,
-                                                      'supported_server_types': '/'.join(
-                                                          cls.supported_server_types + ['unspecified'])})
+    def _validate_server_type(cls, server_type: str):
+        """[cuongdm]
+        Confirm that server type is supported by Magnum for this COE.
+
+        Parameters
+        ----------
+        server_type : str
+            Server type, such as `vm` for virtual machine, `bm` for bare metal.
+
+        Raises
+        ------
+        exception.InvalidParameterValue
+            If server type is not supported.
+        """
+        if server_type not in cls.supported_server_types:  # noqa
+            raise exception.InvalidParameterValue(
+                _('Server type %(server_type)s is not supported, ''expecting a %(supported_server_types)s server type.')
+                % {'server_type': server_type, 'supported_server_types': '/'.join(
+                    cls.supported_server_types + ['unspecified'])})  # noqa
 
 
 class K8sValidator(Validator):
-    supported_network_drivers = ['flannel', 'calico']
-    supported_server_types = ['vm', 'bm']
-    allowed_network_drivers = (
-        CONF.cluster_template.kubernetes_allowed_network_drivers)
-    default_network_driver = (
-        CONF.cluster_template.kubernetes_default_network_driver)
+    """[cuongdm]
+    Validator for validating Kubernetes cluster template.
 
-    supported_volume_driver = ['cinder']
+    Attributes
+    ----------
+    supported_network_drivers : List[str]
+        List of supported network drivers.
+    supported_server_types : List[str]
+        List of supported server types, such as `vm` for virtual machine, `bm` for bare metal.
+    supported_volume_driver : List[str]
+        List of supported volume drivers.
+    allowed_network_drivers : Tuple[str]
+        List of allowed network drivers that admins can configure in magnum.conf.
+    default_network_driver : str
+        Default network driver that admins can configure in magnum.conf. It is used when clients do not specify.
+    """
+
+    supported_network_drivers: List[str] = ['flannel', 'calico']
+    supported_server_types: List[str] = ['vm', 'bm']
+    supported_volume_driver: List[str] = ['cinder']
+    allowed_network_drivers: Tuple[str] = (
+        CONF.cluster_template.kubernetes_allowed_network_drivers)
+    default_network_driver: str = (
+        CONF.cluster_template.kubernetes_default_network_driver)
 
 
 class SwarmValidator(Validator):
-    supported_network_drivers = ['docker', 'flannel']
-    supported_server_types = ['vm', 'bm']
-    allowed_network_drivers = (CONF.cluster_template.
-                               swarm_allowed_network_drivers)
-    default_network_driver = (CONF.cluster_template.
-                              swarm_default_network_driver)
+    """[cuongdm]
+    Validator for validating Swarm cluster template.
 
-    supported_volume_driver = ['rexray']
+    Attributes
+    ----------
+    supported_network_drivers : List[str]
+        List of supported network drivers.
+    supported_server_types : List[str]
+        List of supported server types, such as `vm` for virtual machine, `bm` for bare metal.
+    supported_volume_driver : List[str]
+        List of supported volume drivers. For Swarm, it is `rexray`.
+    allowed_network_drivers : Tuple[str]
+        List of allowed network drivers that admins can configure in magnum.conf.
+    default_network_driver : str
+        Default network driver that admins can configure in magnum.conf. It is used when clients do not specify.
+    """
+
+    supported_network_drivers: List[str] = ['docker', 'flannel']
+    supported_server_types: List[str] = ['vm', 'bm']
+    supported_volume_driver: List[str] = ['rexray']
+    allowed_network_drivers: Tuple[str] = (
+        CONF.cluster_template.swarm_allowed_network_drivers)
+    default_network_driver: str = (
+        CONF.cluster_template.swarm_default_network_driver)
 
 
 class MesosValidator(Validator):
-    supported_network_drivers = ['docker']
-    supported_server_types = ['vm', 'bm']
-    allowed_network_drivers = (CONF.cluster_template.
-                               mesos_allowed_network_drivers)
-    default_network_driver = (CONF.cluster_template.
-                              mesos_default_network_driver)
+    """[cuongdm]
+    Validator for validating Mesos cluster template.
 
-    supported_volume_driver = ['rexray']
+    Attributes
+    ----------
+    supported_network_drivers : List[str]
+        List of supported network drivers.
+    supported_server_types : List[str]
+        List of supported server types, such as `vm` for virtual machine, `bm` for bare metal.
+    supported_volume_driver : List[str]
+        List of supported volume drivers. For Mesos, it is `rexray`.
+    allowed_network_drivers : Tuple[str]
+        List of allowed network drivers that admins can configure in magnum.conf.
+    default_network_driver : str
+        Default network driver that admins can configure in magnum.conf. It is used when clients do not specify.
+    """
+
+    supported_network_drivers: List[str] = ['docker']
+    supported_server_types: List[str] = ['vm', 'bm']
+    supported_volume_driver: List[str] = ['rexray']
+    allowed_network_drivers: Tuple[str] = (
+        CONF.cluster_template.mesos_allowed_network_drivers)
+    default_network_driver: str = (
+        CONF.cluster_template.mesos_default_network_driver)
