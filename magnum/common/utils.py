@@ -307,3 +307,9 @@ def get_openstack_ca():
             return fd.read()
     else:
         return ''
+
+
+def print_debug(text: str):
+    _green = "\033[92m"  # ANSI escape code for green color
+    _reset = "\033[0m"  # ANSI escape code to reset color
+    print(f"{_green}{text}{_reset}")

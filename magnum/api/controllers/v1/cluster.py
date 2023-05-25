@@ -50,6 +50,7 @@ nodegroup_fields = ('node_count', 'master_count', 'node_addresses', 'master_addr
 unset_fields_except = ('uuid', 'name', 'cluster_template_id', 'keypair', 'docker_volume_size', 'labels', 'node_count',
                        'status', 'master_flavor_id', 'flavor_id', 'create_timeout', 'master_count', 'stack_id',
                        'health_status')
+attributes = ("docker_volume_size", "master_flavor_id", "flavor_id", "fixed_network", "fixed_subnet")
 
 
 class ClusterID(wtypes.Base):
@@ -65,7 +66,7 @@ class ClusterID(wtypes.Base):
 
     uuid = types.uuid
 
-    def __init__(self, uuid_: types.UuidType):  # noqa
+    def __init__(self, uuid_):  # noqa
         """[cuongdm]
         Constructor for ClusterID class
         """
@@ -528,8 +529,6 @@ class ClustersController(base.Controller):
         if cluster.master_lb_enabled == wtypes.Unset:
             cluster.master_lb_enabled = cluster_template.master_lb_enabled
 
-        attributes = ["docker_volume_size", "master_flavor_id", "flavor_id",
-                      "fixed_network", "fixed_subnet"]
         for attr in attributes:
             if (getattr(cluster, attr) == wtypes.Unset or
                     not getattr(cluster, attr)):
@@ -547,8 +546,7 @@ class ClustersController(base.Controller):
         cluster_dict['user_id'] = context.user_id
         # NOTE(yuywz): We will generate a random human-readable name for
         # cluster if the name is not specified by user.
-        name = cluster_dict.get('name') or \
-               self._generate_name_for_cluster(context)
+        name = cluster_dict.get('name') or self._generate_name_for_cluster(context)
         cluster_dict['name'] = name
         cluster_dict['coe_version'] = None
         cluster_dict['container_version'] = None
@@ -561,6 +559,7 @@ class ClustersController(base.Controller):
                                                   master_count, node_count,
                                                   cluster.create_timeout)
 
+        LOG.info(f"The creating message for cluster {new_cluster.uuid} has been published to RPC service")
         return ClusterID(new_cluster.uuid)
 
     @base.Controller.api_version("1.1", "1.2")

@@ -25,6 +25,7 @@ from oslo_service import service
 from magnum.common import rpc_service
 from magnum.common import service as magnum_service
 from magnum.common import short_id
+from magnum.common import profiler
 from magnum.conductor.handlers import ca_conductor
 from magnum.conductor.handlers import cluster_conductor
 from magnum.conductor.handlers import conductor_listener

@@ -30,32 +30,43 @@ from magnum.i18n import _
 from magnum import objects
 from magnum.objects import fields
 
-CONF = magnum.conf.CONF
+# [cuongdm] Import for type hinting
+from magnum.objects.cluster import Cluster as ObjCluster
+from magnum.common.context import RequestContext
 
+# [cuongdm] Must be deleted before go-live
+from magnum.common.utils import print_debug
+
+CONF = magnum.conf.CONF
 LOG = logging.getLogger(__name__)
 
 
 @profiler.trace_cls("rpc")
 class Handler(object):
+    """[cuongdm]
+    ClusterConductor is responsible for performing actions on clusters.
+    """
 
     def __init__(self):
+        """[cuongdm]
+        Constructor
+        """
+
         super(Handler, self).__init__()
+        LOG.info("Initializing ClusterConductor handler successfully")
 
-    # Cluster Operations
+    def cluster_create(self, context: RequestContext, cluster: ObjCluster, master_count: int, node_count: int, create_timeout: int):
 
-    def cluster_create(self, context, cluster, master_count, node_count,
-                       create_timeout):
-        LOG.debug('cluster_heat cluster_create')
+        LOG.info(f"Creating cluster {cluster.uuid} with {master_count} master(s) and {node_count} node(s) which creating "
+                 f"time-out is {create_timeout} minutes")
 
-        osc = clients.OpenStackClients(context)
-
+        osc: clients.OpenStackClients = clients.OpenStackClients(context)
         cluster.status = fields.ClusterStatus.CREATE_IN_PROGRESS
         cluster.status_reason = None
         cluster.create()
 
         # Master nodegroup
-        master_ng = conductor_utils._get_nodegroup_object(
-            context, cluster, master_count, is_master=True)
+        master_ng = conductor_utils._get_nodegroup_object(context, cluster, master_count, is_master=True)
         master_ng.create()
         # Minion nodegroup
         minion_ng = conductor_utils._get_nodegroup_object(

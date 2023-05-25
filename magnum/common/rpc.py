@@ -27,20 +27,26 @@ __all__ = [
 ]
 
 import socket
-
-
+import magnum.conf
 import oslo_messaging as messaging
+
+from oslo_log import log as logging
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
 from magnum.common import context as magnum_context
 from magnum.common import exception
-import magnum.conf
+from magnum.common.utils import print_debug
+
+# [cuongdm] For type hinting
+from magnum.objects.base import MagnumObjectSerializer
+from typing import Optional
 
 profiler = importutils.try_import("osprofiler.profiler")
 
 CONF = magnum.conf.CONF
+LOG = logging.getLogger(__name__)
 TRANSPORT = None
 NOTIFIER = None
 
@@ -91,8 +97,8 @@ class JsonPayloadSerializer(messaging.NoOpSerializer):
 
 class RequestContextSerializer(messaging.Serializer):
 
-    def __init__(self, base):
-        self._base = base
+    def __init__(self, base: Optional[MagnumObjectSerializer]):
+        self._base: Optional[MagnumObjectSerializer] = base
 
     def serialize_entity(self, context, entity):
         if not self._base:

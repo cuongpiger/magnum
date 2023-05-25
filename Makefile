@@ -9,3 +9,6 @@ flog-api-uwsgi:
 
 run-api:
 	@./cmd/run.sh start-api
+
+stop-conductor:
+	@./cmd/run.sh stop-conductor

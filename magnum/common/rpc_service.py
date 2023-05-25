@@ -20,27 +20,42 @@ from oslo_service import service
 from magnum.common import profiler
 from magnum.common import rpc
 import magnum.conf
+from magnum.common.utils import print_debug
 from magnum.objects import base as objects_base
 from magnum.service import periodic
 from magnum.servicegroup import magnum_service_periodic as servicegroup
-
+from oslo_log import log as logging
 
 CONF = magnum.conf.CONF
+LOG = logging.getLogger(__name__)
 
 
 class Service(service.Service):
 
-    def __init__(self, topic, server, handlers, binary):
+    def __init__(self, topic: str, server: str, handlers: list, binary: str):
+        """[cuongdm]
+        Constructor of the RPC service.
+
+        Parameters
+        ----------
+        topic : str
+            The topic of the Message Queue service that you want to subscribe to.
+        server : str
+            A rondom string that is used to identify the RPC service.
+        handlers : list
+            A list of handlers that are used to handle the RPC service.
+        binary : str
+            The service name of the RPC service, this parameter is used by OSprofiler.
+        """
         super(Service, self).__init__()
         # TODO(asalkeld) add support for version='x.y'
-        target = messaging.Target(topic=topic, server=server)
-        self._server = rpc.get_server(
-            target, handlers,
-            serializer=objects_base.MagnumObjectSerializer()
-        )
+        target: messaging.Target = messaging.Target(topic=topic, server=server)
+        self._server = rpc.get_server(target, handlers, serializer=objects_base.MagnumObjectSerializer())
 
         self.binary = binary
         profiler.setup(binary, CONF.host)
+        LOG.debug('Created RPC server for service %(service)s on host %(host)s.',
+                  {'service': self.binary, 'host': CONF.host})
 
     def start(self):
         self._server.start()
@@ -57,7 +72,27 @@ class Service(service.Service):
         super(Service, self).stop()
 
     @classmethod
-    def create(cls, topic, server, handlers, binary):
+    def create(cls, topic: str, server: str, handlers: list, binary: str) -> 'Service':
+        """[cuongdm]
+        This method is used to create the RPC service.
+
+        Parameters
+        ----------
+        topic : str
+            The topic of the RPC service that you want to subscribe to.
+        server : str
+            A rondom string that is used to identify the RPC service.
+        handlers : list
+            A list of handlers that are used to handle the RPC service.
+        binary : str
+            The service name of the RPC service, this parameter is used by OSprofiler.
+
+        Returns
+        -------
+        Service
+            The RPC :class:`Service` object.
+        """
+
         service_obj = cls(topic, server, handlers, binary)
         return service_obj
 

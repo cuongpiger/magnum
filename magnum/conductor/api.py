@@ -15,6 +15,7 @@
 from magnum.common import profiler
 from magnum.common import rpc_service
 import magnum.conf
+from magnum.objects import Cluster
 
 CONF = magnum.conf.CONF
 
@@ -36,8 +37,7 @@ class API(rpc_service.API):
                           master_count=master_count, node_count=node_count,
                           create_timeout=create_timeout)
 
-    def cluster_create_async(self, cluster, master_count, node_count,
-                             create_timeout):
+    def cluster_create_async(self, cluster: Cluster, master_count: int, node_count: int, create_timeout: int):
         self._cast('cluster_create', cluster=cluster,
                    master_count=master_count, node_count=node_count,
                    create_timeout=create_timeout)

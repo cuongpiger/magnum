@@ -31,7 +31,7 @@ from magnum.conductor import utils as conductor_utils
 import magnum.conf
 from magnum.drivers.common import driver
 from magnum import objects
-
+from magnum.objects.cluster import Cluster
 
 CONF = magnum.conf.CONF
 LOG = log.getLogger(__name__)
@@ -60,9 +60,10 @@ class ClusterUpdateJob(object):
         objects.fields.ClusterStatus.ROLLBACK_FAILED: taxonomy.ACTION_UPDATE
     }
 
-    def __init__(self, ctx, cluster):
+    def __init__(self, ctx, cluster: Cluster):
         self.ctx = ctx
-        self.cluster = cluster
+        self.cluster: Cluster = cluster
+        LOG.debug(f"Init ClusterUpdateJob for cluster {self.cluster.id} with type({type(self.cluster)})")
 
     def update_status(self):
         LOG.debug("Updating status for cluster %s", self.cluster.id)
