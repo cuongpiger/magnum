@@ -20,7 +20,6 @@ from oslo_service import service
 from magnum.common import profiler
 from magnum.common import rpc
 import magnum.conf
-from magnum.common.utils import print_debug
 from magnum.objects import base as objects_base
 from magnum.service import periodic
 from magnum.servicegroup import magnum_service_periodic as servicegroup

@@ -37,7 +37,6 @@ from oslo_utils import importutils
 
 from magnum.common import context as magnum_context
 from magnum.common import exception
-from magnum.common.utils import print_debug
 
 # [cuongdm] For type hinting
 from magnum.objects.base import MagnumObjectSerializer

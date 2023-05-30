@@ -34,9 +34,6 @@ from magnum.objects import fields
 from magnum.objects.cluster import Cluster as ObjCluster
 from magnum.common.context import RequestContext
 
-# [cuongdm] Must be deleted before go-live
-from magnum.common.utils import print_debug
-
 CONF = magnum.conf.CONF
 LOG = logging.getLogger(__name__)
 
