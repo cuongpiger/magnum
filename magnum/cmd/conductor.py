@@ -74,3 +74,5 @@ def main():
     server.start()
 
     launcher.wait()
+
+main()

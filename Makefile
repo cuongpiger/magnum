@@ -12,3 +12,6 @@ run-api:
 
 stop-conductor:
 	@./cmd/run.sh stop-conductor
+
+start-conductor:
+	@./cmd/run.sh start-conductor
