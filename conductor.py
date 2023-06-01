@@ -1,5 +1,5 @@
 import sys
-from magnum.cmd.conductor import main
+from magnum.cmd import conductor
 
-
-main()
+if __name__ == '__main__':
+    sys.exit(conductor.main())
