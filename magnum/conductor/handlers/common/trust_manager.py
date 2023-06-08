@@ -34,6 +34,7 @@ def create_trustee_and_trust(osc, cluster):
         trust = osc.keystone().create_trust(
             cluster.trustee_user_id)
         cluster.trust_id = trust.id
+        LOG.info(f'Created trustee and trust for cluster: {cluster.uuid} successfully')
 
     except Exception:
         LOG.exception(

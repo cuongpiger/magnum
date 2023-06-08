@@ -123,6 +123,7 @@ def generate_certificates_to_cluster(cluster, context=None):
         cluster.magnum_cert_ref = magnum_cert_ref
         cluster.etcd_ca_cert_ref = etcd_ca_cert_ref
         cluster.front_proxy_ca_cert_ref = fp_ca_cert_ref
+        LOG.info(f'End to generate certificates for user {issuer_name} of cluster {cluster.uuid}')
     except Exception:
         LOG.exception('Failed to generate certificates for Cluster: %s',
                       cluster.uuid)

@@ -30,6 +30,9 @@ from magnum.i18n import _
 from magnum import objects
 from magnum.objects import fields
 
+# [cuongdm] For typing hinting
+from magnum.objects.cluster import Cluster as ObjCluster
+
 CONF = magnum.conf.CONF
 
 LOG = logging.getLogger(__name__)
@@ -43,31 +46,40 @@ class Handler(object):
 
     # Cluster Operations
 
-    def cluster_create(self, context, cluster, master_count, node_count,
-                       create_timeout):
+    def cluster_create(self, context,
+                       cluster: ObjCluster,
+                       master_count: int,
+                       node_count: int,
+                       create_timeout: int):
         """[cuongdm] This function consumes the message queue to lister the creating
         cluster command
 
         :param cluster: magnum.objects.cluster.Cluster - The cluster received from
         message queue.
+        :param master_count: int - The number of master nodes
+        :param node_count: int - The number of worker nodes
+        :param create_timeout: int - The timeout for creating cluster
         """
 
-        LOG.info(f'Creating the cluster ID {cluster.uuid}')
+        LOG.info(f'Creating the cluster ID {cluster.uuid}, including {master_count} master nodes and {node_count} '
+                 f'worker nodes, the time-out is {create_timeout} minutes')
 
         osc = clients.OpenStackClients(context)
 
         cluster.status = fields.ClusterStatus.CREATE_IN_PROGRESS
         cluster.status_reason = None
-        cluster.create()
+        cluster.create()  # [cuongdm] save this cluster info to DB
 
         # Master nodegroup
         master_ng = conductor_utils._get_nodegroup_object(
             context, cluster, master_count, is_master=True)
-        master_ng.create()
+        master_ng.create()  # [cuongdm] save this nodegroup info to DB
+        LOG.info(f"The MASTER nodegroup infomation of the cluster {cluster.uuid} has been saved to DB successfully")
         # Minion nodegroup
         minion_ng = conductor_utils._get_nodegroup_object(
             context, cluster, node_count, is_master=False)
-        minion_ng.create()
+        minion_ng.create()  # [cuongdm] save this nodegroup info to DB
+        LOG.info(f"The MINION nodegroup(s) infomation of the cluster {cluster.uuid} has been saved to DB successfully")
 
         try:
             # Create trustee/trust and set them to cluster
@@ -81,6 +93,7 @@ class Handler(object):
             # Get driver
             cluster_driver = driver.Driver.get_driver_for_cluster(context,
                                                                   cluster)
+            LOG.info(f"The type of cluster driver is {type(cluster_driver)}")
             # Create cluster
             cluster_driver.create_cluster(context, cluster, create_timeout)
             cluster.save()
