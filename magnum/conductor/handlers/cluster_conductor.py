@@ -45,7 +45,14 @@ class Handler(object):
 
     def cluster_create(self, context, cluster, master_count, node_count,
                        create_timeout):
-        LOG.debug('cluster_heat cluster_create')
+        """[cuongdm] This function consumes the message queue to lister the creating
+        cluster command
+
+        :param cluster: magnum.objects.cluster.Cluster - The cluster received from
+        message queue.
+        """
+
+        LOG.info(f'Creating the cluster ID {cluster.uuid}')
 
         osc = clients.OpenStackClients(context)
 
