@@ -74,7 +74,7 @@ class Handler(object):
         master_ng = conductor_utils._get_nodegroup_object(
             context, cluster, master_count, is_master=True)
         master_ng.create()  # [cuongdm] save this nodegroup info to DB
-        LOG.info(f"The MASTER nodegroup infomation of the cluster {cluster.uuid} [name - {cluster.name}] has been saved to DB successfully")
+        LOG.info(f"The MASTER nodegroup infomation of the cluster {cluster.uuid} [name {cluster.name}] has been saved to DB successfully")
         # Minion nodegroup
         minion_ng = conductor_utils._get_nodegroup_object(
             context, cluster, node_count, is_master=False)
